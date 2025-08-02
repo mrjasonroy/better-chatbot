@@ -1,7 +1,8 @@
 import { createPieChartTool } from "./visualization/create-pie-chart";
 import { createBarChartTool } from "./visualization/create-bar-chart";
 import { createLineChartTool } from "./visualization/create-line-chart";
-import { tavilySearchTool, tavilyWebContentTool } from "./web/web-search";
+import { createTableTool } from "./visualization/create-table";
+import { exaSearchTool, exaContentsTool } from "./web/web-search";
 import { AppDefaultToolkit, DefaultToolName } from ".";
 import { Tool } from "ai";
 import { httpFetchTool } from "./http/fetch";
@@ -16,10 +17,11 @@ export const APP_DEFAULT_TOOL_KIT: Record<
     [DefaultToolName.CreatePieChart]: createPieChartTool,
     [DefaultToolName.CreateBarChart]: createBarChartTool,
     [DefaultToolName.CreateLineChart]: createLineChartTool,
+    [DefaultToolName.CreateTable]: createTableTool,
   },
   [AppDefaultToolkit.WebSearch]: {
-    [DefaultToolName.WebSearch]: tavilySearchTool,
-    [DefaultToolName.WebContent]: tavilyWebContentTool,
+    [DefaultToolName.WebSearch]: exaSearchTool,
+    [DefaultToolName.WebContent]: exaContentsTool,
   },
   [AppDefaultToolkit.Http]: {
     [DefaultToolName.Http]: httpFetchTool,
