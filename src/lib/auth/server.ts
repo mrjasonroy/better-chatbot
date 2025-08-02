@@ -11,12 +11,21 @@ import {
   UserSchema,
   VerificationSchema,
 } from "lib/db/pg/schema.pg";
+import { getAuthConfig, getEnabledSocialProviders } from "./config";
 
 import logger from "logger";
 import { redirect } from "next/navigation";
 
+const {
+  emailAndPasswordEnabled,
+  signUpEnabled,
+  socialAuthenticationProviders,
+  allowedOrigins,
+} = getAuthConfig();
+
 export const auth = betterAuth({
   plugins: [nextCookies()],
+  trustedOrigins: allowedOrigins.length > 0 ? allowedOrigins : undefined,
   database: drizzleAdapter(pgDb, {
     provider: "pg",
     schema: {
@@ -27,8 +36,8 @@ export const auth = betterAuth({
     },
   }),
   emailAndPassword: {
-    enabled: true,
-    disableSignUp: process.env.DISABLE_SIGN_UP ? true : false,
+    enabled: emailAndPasswordEnabled,
+    disableSignUp: !signUpEnabled,
   },
   session: {
     cookieCache: {
@@ -50,7 +59,7 @@ export const auth = betterAuth({
   },
   account: {
     accountLinking: {
-      trustedProviders: ["google", "github"],
+      trustedProviders: getEnabledSocialProviders(),
     },
   },
   fetchOptions: {
@@ -60,17 +69,7 @@ export const auth = betterAuth({
       }
     },
   },
-  socialProviders: {
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID || "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
-    },
-    google: {
-      prompt: "select_account",
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    },
-  },
+  socialProviders: socialAuthenticationProviders,
 });
 
 export const getSession = async () => {
