@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getAuthConfig, getEnabledSocialProviders } from "./config";
+import { getAuthConfig } from "./config";
 
 // Mock experimental_taintUniqueValue since it's not available in test environment
 vi.mock("react", async () => {
@@ -10,8 +10,11 @@ vi.mock("react", async () => {
   };
 });
 
+let originalEnv: Record<string, string | undefined>;
 describe("Auth Config", () => {
   beforeEach(() => {
+    // get the original environment variables since other tests may have need them
+    originalEnv = { ...process.env };
     // Clear all environment variables before each test
     vi.unstubAllEnvs();
 
@@ -27,74 +30,13 @@ describe("Auth Config", () => {
     delete process.env.MICROSOFT_FORCE_ACCOUNT_SELECTION;
     delete process.env.DISABLE_EMAIL_SIGN_IN;
     delete process.env.DISABLE_SIGN_UP;
-    delete process.env.ALLOWED_ORIGINS;
   });
 
   afterEach(() => {
+    // restore the original environment variables
+    process.env = { ...originalEnv } as any; //ts-ignore
     // Clean up after each test
     vi.unstubAllEnvs();
-  });
-
-  describe("getEnabledSocialProviders", () => {
-    it("should return empty array when no social providers are configured", () => {
-      const providers = getEnabledSocialProviders();
-      expect(providers).toEqual([]);
-    });
-
-    it("should return github when GitHub credentials are provided", () => {
-      vi.stubEnv("GITHUB_CLIENT_ID", "github-client-id");
-      vi.stubEnv("GITHUB_CLIENT_SECRET", "github-client-secret");
-
-      const providers = getEnabledSocialProviders();
-      expect(providers).toContain("github");
-    });
-
-    it("should return google when Google credentials are provided", () => {
-      vi.stubEnv("GOOGLE_CLIENT_ID", "google-client-id");
-      vi.stubEnv("GOOGLE_CLIENT_SECRET", "google-client-secret");
-
-      const providers = getEnabledSocialProviders();
-      expect(providers).toContain("google");
-    });
-
-    it("should return microsoft when Microsoft credentials are provided", () => {
-      vi.stubEnv("MICROSOFT_CLIENT_ID", "microsoft-client-id");
-      vi.stubEnv("MICROSOFT_CLIENT_SECRET", "microsoft-client-secret");
-
-      const providers = getEnabledSocialProviders();
-      expect(providers).toContain("microsoft");
-    });
-
-    it("should return all providers when all credentials are provided", () => {
-      vi.stubEnv("GITHUB_CLIENT_ID", "github-client-id");
-      vi.stubEnv("GITHUB_CLIENT_SECRET", "github-client-secret");
-      vi.stubEnv("GOOGLE_CLIENT_ID", "google-client-id");
-      vi.stubEnv("GOOGLE_CLIENT_SECRET", "google-client-secret");
-      vi.stubEnv("MICROSOFT_CLIENT_ID", "microsoft-client-id");
-      vi.stubEnv("MICROSOFT_CLIENT_SECRET", "microsoft-client-secret");
-
-      const providers = getEnabledSocialProviders();
-      expect(providers).toHaveLength(3);
-      expect(providers).toContain("github");
-      expect(providers).toContain("google");
-      expect(providers).toContain("microsoft");
-    });
-
-    it("should not return provider when only client ID is provided", () => {
-      vi.stubEnv("GITHUB_CLIENT_ID", "github-client-id");
-      // Missing GITHUB_CLIENT_SECRET
-
-      const providers = getEnabledSocialProviders();
-      expect(providers).not.toContain("github");
-    });
-
-    it("should not return provider when only client secret is provided", () => {
-      vi.stubEnv("GITHUB_CLIENT_SECRET", "github-client-secret");
-      // Missing GITHUB_CLIENT_ID
-
-      const providers = getEnabledSocialProviders();
-      expect(providers).not.toContain("github");
-    });
   });
 
   describe("getAuthConfig", () => {
@@ -109,7 +51,6 @@ describe("Auth Config", () => {
           google: undefined,
           microsoft: undefined,
         },
-        allowedOrigins: [],
       });
     });
 
@@ -246,7 +187,6 @@ describe("Auth Config", () => {
             prompt: "select_account",
           },
         },
-        allowedOrigins: [],
       });
     });
 
@@ -285,7 +225,6 @@ describe("Auth Config", () => {
           google: undefined,
           microsoft: undefined,
         },
-        allowedOrigins: [],
       });
 
       consoleSpy.mockRestore();
@@ -324,107 +263,6 @@ describe("Auth Config", () => {
       const config = getAuthConfig();
       expect(config.emailAndPasswordEnabled).toBe(true);
       expect(config.signUpEnabled).toBe(true);
-    });
-  });
-
-  describe("Allowed Origins Configuration", () => {
-    it("should return empty array when ALLOWED_ORIGINS is not set", () => {
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual([]);
-    });
-
-    it("should parse single origin correctly", () => {
-      vi.stubEnv("ALLOWED_ORIGINS", "https://example.com");
-
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual(["https://example.com"]);
-    });
-
-    it("should parse multiple origins correctly", () => {
-      vi.stubEnv(
-        "ALLOWED_ORIGINS",
-        "https://example.com,http://localhost:3000,https://app.example.com",
-      );
-
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual([
-        "https://example.com",
-        "http://localhost:3000",
-        "https://app.example.com",
-      ]);
-    });
-
-    it("should handle origins with spaces", () => {
-      vi.stubEnv(
-        "ALLOWED_ORIGINS",
-        "https://example.com, http://localhost:3000 , https://app.example.com",
-      );
-
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual([
-        "https://example.com",
-        "http://localhost:3000",
-        "https://app.example.com",
-      ]);
-    });
-
-    it("should filter out empty strings", () => {
-      vi.stubEnv(
-        "ALLOWED_ORIGINS",
-        "https://example.com,,http://localhost:3000,",
-      );
-
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual([
-        "https://example.com",
-        "http://localhost:3000",
-      ]);
-    });
-
-    it("should return empty array for empty string", () => {
-      vi.stubEnv("ALLOWED_ORIGINS", "");
-
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual([]);
-    });
-
-    it("should return empty array for whitespace only", () => {
-      vi.stubEnv("ALLOWED_ORIGINS", "   ");
-
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual([]);
-    });
-
-    it("should handle trailing commas", () => {
-      vi.stubEnv(
-        "ALLOWED_ORIGINS",
-        "https://example.com,http://localhost:3000,",
-      );
-
-      const config = getAuthConfig();
-      expect(config.allowedOrigins).toEqual([
-        "https://example.com",
-        "http://localhost:3000",
-      ]);
-    });
-
-    it("should work with complete auth configuration", () => {
-      vi.stubEnv("DISABLE_EMAIL_SIGN_IN", "0");
-      vi.stubEnv("DISABLE_SIGN_UP", "0");
-      vi.stubEnv("GITHUB_CLIENT_ID", "github-client-id");
-      vi.stubEnv("GITHUB_CLIENT_SECRET", "github-client-secret");
-      vi.stubEnv(
-        "ALLOWED_ORIGINS",
-        "https://example.com,https://app.example.com",
-      );
-
-      const config = getAuthConfig();
-      expect(config).toMatchObject({
-        emailAndPasswordEnabled: true,
-        signUpEnabled: true,
-        allowedOrigins: ["https://example.com", "https://app.example.com"],
-      });
-      expect(config.socialAuthenticationProviders.github).toBeDefined();
     });
   });
 });

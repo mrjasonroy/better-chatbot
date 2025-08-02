@@ -35,22 +35,10 @@ export const SocialAuthenticationConfigSchema = z.object({
   microsoft: MicrosoftConfigSchema.optional(),
 });
 
-export const AllowedOriginsSchema = z
-  .string()
-  .optional()
-  .transform((val) => {
-    if (!val || val.trim() === "") return [];
-    return val
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean);
-  });
-
 export const AuthConfigSchema = z.object({
   emailAndPasswordEnabled: envBooleanSchema.default(true),
   signUpEnabled: envBooleanSchema.default(true),
   socialAuthenticationProviders: SocialAuthenticationConfigSchema,
-  allowedOrigins: AllowedOriginsSchema.default(""),
 });
 
 export type GitHubConfig = z.infer<typeof GitHubConfigSchema>;

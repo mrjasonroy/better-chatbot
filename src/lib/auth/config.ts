@@ -6,10 +6,10 @@ import {
   GoogleConfig,
   MicrosoftConfig,
   AuthConfig,
-  SocialAuthenticationProvider,
+  AuthConfigSchema,
 } from "app-types/authentication";
-import { parseEnvBoolean } from "../utils";
 import { experimental_taintUniqueValue } from "react";
+import { parseEnvBoolean } from "../utils";
 
 function parseSocialAuthConfigs() {
   const configs: {
@@ -83,33 +83,21 @@ function parseSocialAuthConfigs() {
 }
 
 export function getAuthConfig(): AuthConfig {
-  const emailAndPasswordEnabled = process.env.DISABLE_EMAIL_SIGN_IN
-    ? !parseEnvBoolean(process.env.DISABLE_EMAIL_SIGN_IN)
-    : true;
-
-  const signUpEnabled = process.env.DISABLE_SIGN_UP
-    ? !parseEnvBoolean(process.env.DISABLE_SIGN_UP)
-    : true;
-
-  const socialAuthenticationProviders = parseSocialAuthConfigs();
-
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(",")
-        .map((origin) => origin.trim())
-        .filter(Boolean)
-    : [];
-
-  return {
-    emailAndPasswordEnabled,
-    signUpEnabled,
-    socialAuthenticationProviders,
-    allowedOrigins,
+  const rawConfig = {
+    emailAndPasswordEnabled: process.env.DISABLE_EMAIL_SIGN_IN
+      ? !parseEnvBoolean(process.env.DISABLE_EMAIL_SIGN_IN)
+      : true,
+    signUpEnabled: process.env.DISABLE_SIGN_UP
+      ? !parseEnvBoolean(process.env.DISABLE_SIGN_UP)
+      : true,
+    socialAuthenticationProviders: parseSocialAuthConfigs(),
   };
-}
 
-export function getEnabledSocialProviders(): SocialAuthenticationProvider[] {
-  const providers = getAuthConfig().socialAuthenticationProviders;
-  return Object.keys(providers).filter(
-    (key) => providers[key as keyof typeof providers],
-  ) as SocialAuthenticationProvider[];
+  const result = AuthConfigSchema.safeParse(rawConfig);
+
+  if (!result.success) {
+    throw new Error(`Invalid auth configuration: ${result.error.message}`);
+  }
+
+  return result.data;
 }

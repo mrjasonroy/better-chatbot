@@ -11,7 +11,7 @@ import {
   UserSchema,
   VerificationSchema,
 } from "lib/db/pg/schema.pg";
-import { getAuthConfig, getEnabledSocialProviders } from "./config";
+import { getAuthConfig } from "./config";
 
 import logger from "logger";
 import { redirect } from "next/navigation";
@@ -20,12 +20,11 @@ const {
   emailAndPasswordEnabled,
   signUpEnabled,
   socialAuthenticationProviders,
-  allowedOrigins,
 } = getAuthConfig();
 
 export const auth = betterAuth({
   plugins: [nextCookies()],
-  trustedOrigins: allowedOrigins.length > 0 ? allowedOrigins : undefined,
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
   database: drizzleAdapter(pgDb, {
     provider: "pg",
     schema: {
@@ -59,7 +58,11 @@ export const auth = betterAuth({
   },
   account: {
     accountLinking: {
-      trustedProviders: getEnabledSocialProviders(),
+      trustedProviders: (
+        Object.keys(
+          socialAuthenticationProviders,
+        ) as (keyof typeof socialAuthenticationProviders)[]
+      ).filter((key) => socialAuthenticationProviders[key]),
     },
   },
   fetchOptions: {

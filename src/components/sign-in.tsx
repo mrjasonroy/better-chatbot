@@ -62,36 +62,9 @@ export default function SignIn({
       .unwrap();
   };
 
-  const googleSignIn = () => {
-    if (!socialAuthenticationProviders.includes("google"))
-      return toast.warning(t("oauthClientIdNotSet", { provider: "Google" }));
-
-    authClient.signIn
-      .social({
-        provider: "google",
-      })
-      .catch((e) => {
-        toast.error(e.error);
-      });
-  };
-
-  const githubSignIn = () => {
-    if (!socialAuthenticationProviders.includes("github"))
-      return toast.warning(t("oauthClientIdNotSet", { provider: "GitHub" }));
-    authClient.signIn
-      .social({
-        provider: "github",
-      })
-      .catch((e) => {
-        toast.error(e.error);
-      });
-  };
-
-  const microsoftSignIn = () => {
-    if (!socialAuthenticationProviders.includes("microsoft"))
-      return toast.warning(t("oauthClientIdNotSet", { provider: "Microsoft" }));
-    authClient.signIn.social({
-      provider: "microsoft",
+  const handleSocialSignIn = (provider: SocialAuthenticationProvider) => {
+    authClient.signIn.social({ provider }).catch((e) => {
+      toast.error(e.error);
     });
   };
   return (
@@ -168,7 +141,7 @@ export default function SignIn({
                 {socialAuthenticationProviders.includes("google") && (
                   <Button
                     variant="outline"
-                    onClick={googleSignIn}
+                    onClick={() => handleSocialSignIn("google")}
                     className="flex-1 w-full"
                   >
                     <GoogleIcon className="size-4 fill-foreground" />
@@ -178,7 +151,7 @@ export default function SignIn({
                 {socialAuthenticationProviders.includes("github") && (
                   <Button
                     variant="outline"
-                    onClick={githubSignIn}
+                    onClick={() => handleSocialSignIn("github")}
                     className="flex-1 w-full"
                   >
                     <GithubIcon className="size-4 fill-foreground" />
@@ -188,7 +161,7 @@ export default function SignIn({
                 {socialAuthenticationProviders.includes("microsoft") && (
                   <Button
                     variant="outline"
-                    onClick={microsoftSignIn}
+                    onClick={() => handleSocialSignIn("microsoft")}
                     className="flex-1 w-full"
                   >
                     <MicrosoftIcon className="size-4 fill-foreground" />

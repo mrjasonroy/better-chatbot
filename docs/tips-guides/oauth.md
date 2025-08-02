@@ -82,25 +82,28 @@ MICROSOFT_FORCE_ACCOUNT_SELECTION=1
 
 ```text
 # Disable email/password sign-in (optional)
-EMAIL_AND_PASSWORD_ENABLED=0
+DISABLE_EMAIL_SIGN_IN=1
 
 # Disable new user sign-ups (optional)
-SIGN_UP_ENABLED=0
+DISABLE_SIGN_UP=1
 ```
 
-### CORS Configuration
+### Base URL Configuration
 
-To allow OAuth callbacks from specific origins, set the `ALLOWED_ORIGINS` environment variable:
+For OAuth to work correctly, you must set the `BETTER_AUTH_URL` environment variable to match how you access the application:
 
 ```text
-# Comma-separated list of allowed origins
-ALLOWED_ORIGINS=http://localhost:3000,https://example.com,https://app.example.com
+# For local development with HTTPS
+BETTER_AUTH_URL=https://localhost:3000
+
+# For local development with HTTP (default)
+BETTER_AUTH_URL=http://localhost:3000
+
+# For production
+BETTER_AUTH_URL=https://yourdomain.com
 ```
 
-This is useful when:
-- Running the app behind a proxy
-- Using custom domains
-- Restricting OAuth callbacks to specific origins
+**Important:** If you're using HTTPS locally (e.g., via a reverse proxy or custom SSL setup), make sure to set `BETTER_AUTH_URL=https://localhost:3000` to ensure OAuth callbacks work correctly.
 
 ## Done
 
