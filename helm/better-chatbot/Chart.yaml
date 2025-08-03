@@ -1,0 +1,23 @@
+apiVersion: v2
+name: better-chatbot
+description: A Helm chart for better-chatbot - Advanced AI chatbot with MCP integration
+type: application
+version: 0.1.0
+appVersion: "1.19.1"
+keywords:
+  - chatbot
+  - ai
+  - nextjs
+  - mcp
+home: https://github.com/cgoinglove/better-chatbot
+sources:
+  - https://github.com/cgoinglove/better-chatbot
+maintainers:
+  - name: better-chatbot-team
+    url: https://github.com/cgoinglove/better-chatbot
+
+dependencies:
+  - name: postgresql
+    version: "15.5.32"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled

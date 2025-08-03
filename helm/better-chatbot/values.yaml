@@ -1,0 +1,138 @@
+# Default values for better-chatbot
+replicaCount: 1
+
+image:
+  repository: better-chatbot
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1001
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: better-chatbot.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: better-chatbot-tls
+  #    hosts:
+  #      - better-chatbot.local
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+
+volumeMounts: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Application configuration
+config:
+  # Environment variables that will be added to ConfigMap
+  NODE_ENV: production
+  NEXT_TELEMETRY_DISABLED: "1"
+  # Set to true to enable file-based MCP config (not recommended for production)
+  FILE_BASED_MCP_CONFIG: "false"
+
+# Secrets configuration - provide these values or create the secret manually
+secrets:
+  # Database configuration
+  # If using external database, provide DATABASE_URL
+  # If using included PostgreSQL, this will be auto-generated
+  DATABASE_URL: ""
+  
+  # AI Provider API Keys (required)
+  OPENAI_API_KEY: ""
+  ANTHROPIC_API_KEY: ""
+  GOOGLE_GENERATIVE_AI_API_KEY: ""
+  XAI_API_KEY: ""
+  
+  # Auth configuration (required)
+  BETTER_AUTH_SECRET: ""
+  BETTER_AUTH_URL: ""
+  
+  # OAuth configuration (optional)
+  GOOGLE_CLIENT_ID: ""
+  GOOGLE_CLIENT_SECRET: ""
+  GITHUB_CLIENT_ID: ""
+  GITHUB_CLIENT_SECRET: ""
+  
+  # Search integration (optional)
+  EXA_API_KEY: ""
+
+# PostgreSQL configuration
+postgresql:
+  # Set to true to deploy PostgreSQL alongside the app
+  enabled: true
+  auth:
+    postgresPassword: "postgres"
+    username: "better_chatbot"
+    password: "better_chatbot"
+    database: "better_chatbot"
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi

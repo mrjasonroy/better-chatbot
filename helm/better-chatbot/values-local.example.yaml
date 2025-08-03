@@ -1,0 +1,64 @@
+# Example local development values for better-chatbot Helm chart
+# Copy this file to values-local.yaml and fill in your API keys
+
+# Use included PostgreSQL for local development
+postgresql:
+  enabled: true
+  auth:
+    database: "better_chatbot"
+    username: "better_chatbot"
+    password: "dev_password"
+
+# Local development secrets
+secrets:
+  # Required: Authentication
+  BETTER_AUTH_SECRET: "your-random-32-char-secret-key-here"
+  BETTER_AUTH_URL: "http://localhost:3000"
+  
+  # Required: AI Provider API Keys
+  OPENAI_API_KEY: "sk-your-openai-key-here"
+  ANTHROPIC_API_KEY: "sk-ant-your-anthropic-key-here"
+  
+  # Optional: Additional AI Providers
+  GOOGLE_GENERATIVE_AI_API_KEY: "your-google-ai-key-here"
+  XAI_API_KEY: "your-xai-key-here"
+  
+  # Optional: Search Integration
+  EXA_API_KEY: "your-exa-search-key-here"
+  
+  # Optional: OAuth Providers
+  GOOGLE_CLIENT_ID: "your-google-oauth-client-id"
+  GOOGLE_CLIENT_SECRET: "your-google-oauth-secret"
+  GITHUB_CLIENT_ID: "your-github-oauth-client-id"
+  GITHUB_CLIENT_SECRET: "your-github-oauth-secret"
+
+# Local development configuration
+config:
+  NODE_ENV: "development"
+  NEXT_TELEMETRY_DISABLED: "1"
+  FILE_BASED_MCP_CONFIG: "false"
+
+# Enable port-forward friendly service
+service:
+  type: ClusterIP
+  port: 3000
+
+# Lower resource requirements for local development
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Disable ingress for local development (use port-forward instead)
+ingress:
+  enabled: false
+
+# Keep single replica for development
+replicaCount: 1
+
+# Disable autoscaling for development
+autoscaling:
+  enabled: false
