@@ -19,7 +19,26 @@ docker build -t better-chatbot:latest -f docker/Dockerfile .
 
 The Helm chart uses `imagePullPolicy: IfNotPresent` which means it will use your local image if available, or try to pull from a registry (which will fail since the image isn't published). **Always build the image first!**
 
-## Installation
+## Quick Setup from .env
+
+If you already have a `.env` file configured, you can automatically generate Helm values:
+
+```bash
+# 1. Build the Docker image
+docker build -t better-chatbot:latest -f docker/Dockerfile .
+
+# 2. Generate Helm values from your .env file
+pnpm k8s:values
+
+# 3. Deploy with the generated values
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm install dev-chatbot ./helm/better-chatbot -f helm/better-chatbot/values-local.yaml
+```
+
+This will create `helm/better-chatbot/values-local.yaml` with your environment variables properly configured for Kubernetes.
+
+## Manual Installation
 
 ### Quick Start (with included PostgreSQL)
 

@@ -36,6 +36,10 @@ yarn-error.log*
 .env.*
 !.env.example
 
+# helm local values (contains secrets)
+helm/**/values-local.yaml
+values-local.yaml
+
 # vercel
 .vercel
 
