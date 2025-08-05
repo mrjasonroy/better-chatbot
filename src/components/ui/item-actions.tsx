@@ -109,10 +109,7 @@ export function ItemActions({
                       variant="ghost"
                       size="icon"
                       className="size-8 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <VisibilityIcon className="size-4" />
                     </Button>
@@ -162,7 +159,6 @@ export function ItemActions({
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 onBookmarkToggle(isBookmarked);
               }}
@@ -189,7 +185,6 @@ export function ItemActions({
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 router.push(editHref);
               }}
@@ -213,7 +208,6 @@ export function ItemActions({
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 onDelete();
               }}

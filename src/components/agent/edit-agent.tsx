@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import useSWR from "swr";
 import { toast } from "sonner";
+import { authClient } from "auth/client";
 import { useInvalidateAgents } from "@/hooks/queries/use-agents";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { useWorkflowToolList } from "@/hooks/queries/use-workflow-tool-list";
 import { useObjectState } from "@/hooks/use-object-state";
-import { useBookmark } from "@/hooks/use-bookmark";
-import { Agent, AgentCreateSchema, AgentUpdateSchema } from "app-types/agent";
+import { Agent, AgentUpsertSchema } from "app-types/agent";
 import { ChatMention } from "app-types/chat";
 import { MCPServerInfo } from "app-types/mcp";
 import { WorkflowSummary } from "app-types/workflow";
@@ -18,14 +19,7 @@ import { BACKGROUND_COLORS } from "lib/const";
 import { cn, fetcher, objectFlow } from "lib/utils";
 import { safe } from "ts-safe";
 import { handleErrorWithToast } from "ui/shared-toast";
-import {
-  ChevronDownIcon,
-  Loader,
-  WandSparklesIcon,
-  Bookmark,
-  BookmarkCheck,
-  Trash2,
-} from "lucide-react";
+import { ChevronDownIcon, Loader, WandSparklesIcon } from "lucide-react";
 import { Button } from "ui/button";
 import {
   DropdownMenu,
@@ -72,35 +66,20 @@ const defaultConfig = (): PartialBy<
   };
 };
 
-interface EditAgentProps {
-  initialAgent?: Agent;
-  userId: string;
-  isOwner?: boolean;
-  hasEditAccess?: boolean;
-  isBookmarked?: boolean;
-}
-
-export default function EditAgent({
-  initialAgent,
-  userId,
-  isOwner = true,
-  hasEditAccess = true,
-  isBookmarked: initialBookmarked = false,
-}: EditAgentProps) {
+export default function EditAgent({ id }: { id?: string }) {
   const t = useTranslations();
+  const { data: session } = authClient.useSession();
+  const currentUserId = session?.user?.id;
   const invalidateAgents = useInvalidateAgents();
   const router = useRouter();
 
   const [openGenerateAgentDialog, setOpenGenerateAgentDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const [_isOwner, setIsOwner] = useState(true);
+  const [hasEditAccess, setHasEditAccess] = useState(true);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Initialize agent state with initial data or defaults
-  const [agent, setAgent] = useObjectState(initialAgent || defaultConfig());
-
-  const { toggleBookmark } = useBookmark({ itemType: "agent" });
+  const [agent, setAgent] = useObjectState(defaultConfig());
 
   const { data: mcpList, isLoading: isMcpLoading } = useMcpList();
   const { data: workflowToolList, isLoading: isWorkflowLoading } =
@@ -155,92 +134,72 @@ export default function EditAgent({
     [mcpList, workflowToolList, setAgent],
   );
 
+  const {
+    isLoading: isStoredAgentLoading,
+    mutate: mutateStoredAgent,
+    isValidating,
+  } = useSWR(id ? `/api/agent/${id}` : null, fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+    revalidateIfHidden: false,
+    onError: (error) => {
+      handleErrorWithToast(error);
+      router.push(`/`);
+    },
+    onSuccess: (data) => {
+      if (data) {
+        setAgent({ ...defaultConfig(), ...data });
+        const userIsOwner = data.userId === currentUserId;
+        setIsOwner(userIsOwner);
+        const canEdit = userIsOwner || data.visibility === "public";
+        setHasEditAccess(canEdit);
+      } else {
+        toast.error(`Agent not found`);
+        router.push(`/`);
+      }
+    },
+  });
+
   const saveAgent = useCallback(() => {
-    if (initialAgent) {
-      safe(() => AgentUpdateSchema.parse({ ...agent }))
-        .map(JSON.stringify)
-        .map(async (body) =>
-          fetcher(`/api/agent/${initialAgent.id}`, {
-            method: "PUT",
-            body,
-          }),
-        )
-        .ifOk(() => {
-          invalidateAgents();
-          toast.success(t("Agent.updated"));
-          router.push(`/agents`);
-        })
-        .ifFail(handleErrorWithToast)
-        .watch(() => setIsSaving(false));
-    } else {
-      setIsSaving(true);
-      safe(() => AgentCreateSchema.parse({ ...agent, userId }))
-        .map(JSON.stringify)
-        .map(async (body) =>
-          fetcher(`/api/agent`, {
-            method: "POST",
-            body,
-          }),
-        )
-        .ifOk(() => {
-          invalidateAgents();
-          toast.success(initialAgent ? t("Agent.updated") : t("Agent.created"));
-          router.push(`/agents`);
-        })
-        .ifFail(handleErrorWithToast)
-        .watch(() => setIsSaving(false));
-    }
-  }, [agent, userId, invalidateAgents, router, initialAgent, t]);
+    setIsSaving(true);
+    safe(() => AgentUpsertSchema.parse(agent))
+      .map(JSON.stringify)
+      .map(async (body) =>
+        fetcher(`/api/agent`, {
+          method: "POST",
+          body,
+        }),
+      )
+      .ifOk(() => {
+        invalidateAgents();
+        router.push(`/agents`);
+      })
+      .ifFail(handleErrorWithToast)
+      .watch(() => setIsSaving(false));
+  }, [agent, invalidateAgents, router]);
 
   const updateVisibility = useCallback(
     async (visibility: Visibility) => {
-      if (initialAgent?.id) {
-        safe(() => AgentUpdateSchema.parse({ visibility }))
-          .map(JSON.stringify)
-          .map(async (body) =>
-            fetcher(`/api/agent/${initialAgent.id}`, {
-              method: "PUT",
-              body,
-            }),
-          )
-          .ifOk(() => {
-            setAgent({ visibility });
-            invalidateAgents();
-            toast.success("Visibility updated");
-          })
-          .ifFail(handleErrorWithToast)
-          .watch(() => setIsSaving(false));
+      if (id) {
+        try {
+          await fetcher(`/api/agent/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({ visibility }),
+          });
+
+          setAgent({ visibility });
+          invalidateAgents();
+          toast.success("Visibility updated");
+        } catch (error) {
+          handleErrorWithToast(error as Error);
+        }
       } else {
         setAgent({ visibility });
       }
     },
-    [initialAgent?.id, invalidateAgents, setAgent],
+    [id, invalidateAgents, setAgent],
   );
-
-  const deleteAgent = useCallback(async () => {
-    if (!initialAgent?.id) return;
-
-    if (!confirm(t("Agent.deleteConfirm"))) return;
-
-    try {
-      await fetcher(`/api/agent/${initialAgent.id}`, {
-        method: "DELETE",
-      });
-
-      invalidateAgents();
-      toast.success(t("Agent.deleted"));
-      router.push("/agents");
-    } catch (error) {
-      handleErrorWithToast(error as Error);
-    }
-  }, [initialAgent?.id, invalidateAgents, router, t]);
-
-  const handleBookmarkToggle = useCallback(async () => {
-    if (!initialAgent?.id) return;
-
-    await toggleBookmark({ id: initialAgent.id, isBookmarked });
-    setIsBookmarked(!isBookmarked);
-  }, [initialAgent?.id, isBookmarked, toggleBookmark]);
 
   const handleGenerateAgent = useCallback(
     (generatedData: any) => {
@@ -283,10 +242,18 @@ export default function EditAgent({
   }, [isMcpLoading, isWorkflowLoading]);
 
   const isLoading = useMemo(() => {
-    return isLoadingTool || isSaving;
-  }, [isLoadingTool, isSaving]);
+    return isLoadingTool || isSaving || isValidating;
+  }, [isLoadingTool, isSaving, isValidating]);
 
   const isGenerating = openGenerateAgentDialog;
+
+  useEffect(() => {
+    if (id && !isValidating) {
+      mutateStoredAgent();
+    } else if (!id) {
+      setAgent(defaultConfig());
+    }
+  }, [id, isValidating, mutateStoredAgent, setAgent]);
 
   return (
     <ScrollArea className="h-full w-full relative">
@@ -303,7 +270,7 @@ export default function EditAgent({
           )}
 
           <div className="flex items-center gap-2">
-            {hasEditAccess && !initialAgent && (
+            {hasEditAccess && !id && (
               <>
                 <Button
                   variant="ghost"
@@ -344,34 +311,15 @@ export default function EditAgent({
               </>
             )}
 
-            {initialAgent && (
-              <div className="flex items-center gap-2">
-                {/* Bookmark button - only for non-owners */}
-                {!isOwner && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleBookmarkToggle}
-                    disabled={isLoading}
-                  >
-                    {isBookmarked ? (
-                      <BookmarkCheck className="size-4" />
-                    ) : (
-                      <Bookmark className="size-4" />
-                    )}
-                  </Button>
-                )}
-
-                {/* Visibility dropdown - only for owners */}
-                {isOwner && (
-                  <ItemActions
-                    type="agent"
-                    visibility={agent.visibility || "private"}
-                    isOwner={true}
-                    onVisibilityChange={updateVisibility}
-                  />
-                )}
-              </div>
+            {id && hasEditAccess && !isStoredAgentLoading && (
+              <ItemActions
+                type="agent"
+                visibility={agent.visibility || "private"}
+                isOwner={hasEditAccess}
+                onVisibilityChange={
+                  hasEditAccess ? updateVisibility : undefined
+                }
+              />
             )}
           </div>
         </div>
@@ -381,7 +329,7 @@ export default function EditAgent({
             <Label htmlFor="agent-name">
               {t("Agent.agentNameAndIconLabel")}
             </Label>
-            {false ? (
+            {isStoredAgentLoading ? (
               <Skeleton className="w-full h-10" />
             ) : (
               <Input
@@ -396,7 +344,7 @@ export default function EditAgent({
               />
             )}
           </div>
-          {false ? (
+          {isStoredAgentLoading ? (
             <Skeleton className="w-16 h-16" />
           ) : (
             <AgentIconPicker
@@ -411,7 +359,7 @@ export default function EditAgent({
           <Label htmlFor="agent-description">
             {t("Agent.agentDescriptionLabel")}
           </Label>
-          {false ? (
+          {isStoredAgentLoading ? (
             <Skeleton className="w-full h-10" />
           ) : (
             <Input
@@ -435,7 +383,7 @@ export default function EditAgent({
         <div className="flex flex-col gap-6">
           <div className="flex gap-2 items-center">
             <span>{t("Agent.thisAgentIs")}</span>
-            {false ? (
+            {isStoredAgentLoading ? (
               <Skeleton className="w-44 h-10" />
             ) : (
               <Input
@@ -462,7 +410,7 @@ export default function EditAgent({
             <Label htmlFor="agent-prompt" className="text-base">
               {t("Agent.agentInstructionsLabel")}
             </Label>
-            {false ? (
+            {isStoredAgentLoading ? (
               <Skeleton className="w-full h-48" />
             ) : (
               <Textarea
@@ -489,7 +437,7 @@ export default function EditAgent({
             <Label htmlFor="agent-tool-bindings" className="text-base">
               {t("Agent.agentToolsLabel")}
             </Label>
-            {false ? (
+            {isStoredAgentLoading ? (
               <Skeleton className="w-full h-12" />
             ) : (
               <AgentToolSelector
@@ -511,25 +459,10 @@ export default function EditAgent({
         </div>
 
         {hasEditAccess && (
-          <div className={cn("flex justify-between", false && "hidden")}>
-            {/* Delete button - only for owners */}
-            {initialAgent && isOwner && (
-              <Button
-                className="mt-2"
-                variant="destructive"
-                onClick={deleteAgent}
-                disabled={isLoading}
-              >
-                <Trash2 className="size-4 mr-2" />
-                {t("Common.delete")}
-              </Button>
-            )}
-
-            <Button
-              className={cn("mt-2", !initialAgent || !isOwner ? "ml-auto" : "")}
-              onClick={saveAgent}
-              disabled={isLoading}
-            >
+          <div
+            className={cn("flex justify-end", isStoredAgentLoading && "hidden")}
+          >
+            <Button className="mt-2" onClick={saveAgent} disabled={isLoading}>
               {isSaving ? t("Common.saving") : t("Common.save")}
               {isSaving && <Loader className="size-4 animate-spin" />}
             </Button>

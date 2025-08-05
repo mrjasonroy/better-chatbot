@@ -3,7 +3,7 @@ import { getSession } from "auth/server";
 import { z } from "zod";
 import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
-import { AgentCreateSchema, AgentQuerySchema } from "app-types/agent";
+import { AgentUpsertSchema, AgentQuerySchema } from "app-types/agent";
 
 export async function GET(request: Request) {
   const session = await getSession();
@@ -59,11 +59,34 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const data = AgentCreateSchema.parse(body);
+    const data = AgentUpsertSchema.parse(body);
 
-    const agent = await agentRepository.insertAgent({
+    // If updating an existing agent, check access
+    if (data.id) {
+      const hasAccess = await agentRepository.checkAccess(
+        data.id,
+        session.user.id,
+        false, // readOnly = false for write operations
+      );
+
+      if (!hasAccess) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      // For non-owners of public agents, preserve original visibility
+      const existingAgent = await agentRepository.selectAgentById(
+        data.id,
+        session.user.id,
+      );
+      if (existingAgent && existingAgent.userId !== session.user.id) {
+        data.visibility = existingAgent.visibility;
+      }
+    }
+
+    const agent = await agentRepository.upsertAgent({
       ...data,
-      userId: session.user.id,
+      userId: session.user.id, // Always use current user's ID for new agents
+      visibility: data.visibility || "private",
     });
     serverCache.delete(CacheKeys.agentInstructions(agent.id));
 

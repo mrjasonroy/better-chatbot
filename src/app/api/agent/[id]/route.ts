@@ -42,7 +42,11 @@ export async function PUT(
     const data = AgentUpdateSchema.parse(body);
 
     // Check access for write operations
-    const hasAccess = await agentRepository.checkAccess(id, session.user.id);
+    const hasAccess = await agentRepository.checkAccess(
+      id,
+      session.user.id,
+      false, // readOnly = false for write operations
+    );
     if (!hasAccess) {
       return new Response("Unauthorized", { status: 401 });
     }
@@ -88,13 +92,12 @@ export async function DELETE(
     const hasAccess = await agentRepository.checkAccess(
       id,
       session.user.id,
-      true, // destructive = true for delete operations
+      false, // readOnly = false for write operations
     );
     if (!hasAccess) {
       return new Response("Unauthorized", { status: 401 });
     }
     await agentRepository.deleteAgent(id, session.user.id);
-    serverCache.delete(CacheKeys.agentInstructions(id));
     return Response.json({ success: true });
   } catch (error) {
     console.error("Failed to delete agent:", error);

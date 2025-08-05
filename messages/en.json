@@ -397,8 +397,6 @@
     "removeBookmark": "Remove bookmark",
     "visibilityUpdated": "Visibility updated",
     "deleted": "Agent deleted",
-    "created": "Agent created successfully",
-    "updated": "Agent updated successfully",
     "deleteConfirm": "Are you sure you want to delete this agent?",
     "makePrivate": "Make Private",
     "makeReadonly": "Make Read Only",

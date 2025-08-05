@@ -20,38 +20,13 @@ export const pgAgentRepository: AgentRepository = {
         updatedAt: new Date(),
       })
       .returning();
-
-    return {
-      ...result,
-      description: result.description ?? undefined,
-      icon: result.icon ?? undefined,
-      instructions: result.instructions ?? {},
-    };
+    return result as Agent;
   },
 
-  async selectAgentById(id, userId): Promise<Agent | null> {
+  async selectAgentById(id, userId) {
     const [result] = await db
-      .select({
-        id: AgentSchema.id,
-        name: AgentSchema.name,
-        description: AgentSchema.description,
-        icon: AgentSchema.icon,
-        userId: AgentSchema.userId,
-        instructions: AgentSchema.instructions,
-        visibility: AgentSchema.visibility,
-        createdAt: AgentSchema.createdAt,
-        updatedAt: AgentSchema.updatedAt,
-        isBookmarked: sql<boolean>`${BookmarkSchema.id} IS NOT NULL`,
-      })
+      .select()
       .from(AgentSchema)
-      .leftJoin(
-        BookmarkSchema,
-        and(
-          eq(BookmarkSchema.itemId, AgentSchema.id),
-          eq(BookmarkSchema.userId, userId),
-          eq(BookmarkSchema.itemType, "agent"),
-        ),
-      )
       .where(
         and(
           eq(AgentSchema.id, id),
@@ -62,16 +37,7 @@ export const pgAgentRepository: AgentRepository = {
           ),
         ),
       );
-
-    if (!result) return null;
-
-    return {
-      ...result,
-      description: result.description ?? undefined,
-      icon: result.icon ?? undefined,
-      instructions: result.instructions ?? {},
-      isBookmarked: result.isBookmarked ?? false,
-    };
+    return result as Agent | null;
   },
 
   async selectAgentsByUserId(userId) {
@@ -111,27 +77,41 @@ export const pgAgentRepository: AgentRepository = {
     const [result] = await db
       .update(AgentSchema)
       .set({
-        ...agent,
+        ...(agent as object),
         updatedAt: new Date(),
       })
-      .where(
-        and(
-          // Only allow updates to agents owned by the user or public agents
-          eq(AgentSchema.id, id),
-          or(
-            eq(AgentSchema.userId, userId),
-            eq(AgentSchema.visibility, "public"),
-          ),
-        ),
-      )
+      .where(and(eq(AgentSchema.id, id), eq(AgentSchema.userId, userId)))
       .returning();
+    return result as Agent;
+  },
 
-    return {
-      ...result,
-      description: result.description ?? undefined,
-      icon: result.icon ?? undefined,
-      instructions: result.instructions ?? {},
-    };
+  async upsertAgent(agent) {
+    const [result] = await db
+      .insert(AgentSchema)
+      .values({
+        id: agent.id || generateUUID(),
+        name: agent.name,
+        description: agent.description,
+        icon: agent.icon,
+        userId: agent.userId,
+        instructions: agent.instructions,
+        visibility: agent.visibility || "private",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [AgentSchema.id],
+        set: {
+          name: agent.name,
+          description: agent.description,
+          icon: agent.icon,
+          instructions: agent.instructions,
+          visibility: agent.visibility,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result as Agent;
   },
 
   async deleteAgent(id, userId) {
@@ -235,7 +215,7 @@ export const pgAgentRepository: AgentRepository = {
     }));
   },
 
-  async checkAccess(agentId, userId, destructive = false) {
+  async checkAccess(agentId, userId, readOnly = true) {
     const [agent] = await db
       .select({
         visibility: AgentSchema.visibility,
@@ -247,7 +227,10 @@ export const pgAgentRepository: AgentRepository = {
       return false;
     }
     if (userId == agent.userId) return true;
-    if (agent.visibility === "public" && !destructive) return true;
-    return false;
+    if (agent.visibility === "private") {
+      return false;
+    }
+    if (agent.visibility == "readonly" && !readOnly) return false;
+    return true;
   },
 };

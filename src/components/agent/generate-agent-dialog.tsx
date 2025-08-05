@@ -38,9 +38,8 @@ export function GenerateAgentDialog({
     appStore.getState().chatModel,
   );
   const [generateAgentPrompt, setGenerateAgentPrompt] = useState("");
-  const [submittedPrompt, setSubmittedPrompt] = useState("");
 
-  const { submit, isLoading } = experimental_useObject({
+  const { submit } = experimental_useObject({
     api: "/api/agent/ai",
     schema: AgentGenerateSchema,
     onFinish(event) {
@@ -53,22 +52,17 @@ export function GenerateAgentDialog({
           onToolsGenerated(event.object.tools);
         }
       }
-      // Close dialog after generation completes
-      onOpenChange(false);
-      setGenerateAgentPrompt("");
-      setSubmittedPrompt("");
-      setGenerateModel(undefined);
     },
   });
 
   const submitGenerateAgent = () => {
-    setSubmittedPrompt(generateAgentPrompt);
     submit({
       message: generateAgentPrompt,
       chatModel: generateModel,
     });
-    setGenerateAgentPrompt(""); // Clear textarea immediately after submit
-    // Don't close dialog immediately - will close in onFinish
+    onOpenChange(false);
+    setGenerateAgentPrompt("");
+    setGenerateModel(undefined);
   };
 
   return (
@@ -89,11 +83,7 @@ export function GenerateAgentDialog({
 
           <div className="flex justify-end px-4">
             <p className="text-sm bg-primary text-primary-foreground py-4 px-6 rounded-lg">
-              {isLoading && submittedPrompt ? (
-                submittedPrompt
-              ) : (
-                <MessageLoading className="size-4" />
-              )}
+              <MessageLoading className="size-4" />
             </p>
           </div>
 
@@ -102,10 +92,9 @@ export function GenerateAgentDialog({
               value={generateAgentPrompt}
               autoFocus
               placeholder="input prompt here..."
-              disabled={isLoading}
               onChange={(e) => setGenerateAgentPrompt(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && e.metaKey && !isLoading) {
+                if (e.key === "Enter" && e.metaKey) {
                   e.preventDefault();
                   submitGenerateAgent();
                 }
@@ -118,22 +107,14 @@ export function GenerateAgentDialog({
                 onSelect={(model) => setGenerateModel(model)}
               />
               <Button
-                disabled={!generateAgentPrompt.trim() || isLoading}
+                disabled={!generateAgentPrompt.trim()}
                 size="sm"
                 onClick={submitGenerateAgent}
                 className="text-xs"
               >
-                <span className="mr-1">
-                  {isLoading ? "Generating..." : "Send"}
-                </span>
-                {isLoading ? (
-                  <div className="size-3 border border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <CommandIcon className="size-3" />
-                    <CornerRightUpIcon className="size-3" />
-                  </>
-                )}
+                <span className="mr-1">Send</span>
+                <CommandIcon className="size-3" />
+                <CornerRightUpIcon className="size-3" />
               </Button>
             </div>
           </div>
