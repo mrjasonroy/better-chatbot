@@ -58,6 +58,7 @@ export type WorkflowSummary = {
   icon?: WorkflowIcon;
   visibility: "public" | "private" | "readonly";
   isPublished: boolean;
+  userId: string;
   userName: string;
   userAvatar?: string;
   updatedAt: Date;

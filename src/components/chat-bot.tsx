@@ -87,6 +87,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
     allowedMcpServers,
     threadList,
     threadMentions,
+    pendingAgentMention,
   ] = appStore(
     useShallow((state) => [
       state.mutate,
@@ -96,6 +97,7 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       state.allowedMcpServers,
       state.threadList,
       state.threadMentions,
+      state.pendingAgentMention,
     ]),
   );
 
@@ -323,6 +325,19 @@ export default function ChatBot({ threadId, initialMessages, slots }: Props) {
       appStoreMutate({ currentThreadId: null });
     };
   }, [threadId]);
+
+  // Handle pending agent mention when a new thread is created
+  useEffect(() => {
+    if (pendingAgentMention && threadId) {
+      appStoreMutate((prev) => ({
+        threadMentions: {
+          ...prev.threadMentions,
+          [threadId]: [pendingAgentMention],
+        },
+        pendingAgentMention: undefined, // Clear the pending mention
+      }));
+    }
+  }, [pendingAgentMention, threadId, appStoreMutate]);
 
   useEffect(() => {
     if (isInitialThreadEntry)

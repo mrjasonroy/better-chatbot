@@ -20,11 +20,15 @@ import {
   Loader,
   WandSparklesIcon,
   XIcon,
+  Lock,
+  Eye,
+  Globe,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useInvalidateAgents } from "@/hooks/queries/use-agents";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
@@ -44,7 +48,7 @@ import {
   RandomDataGeneratorExample,
   WeatherExample,
 } from "lib/ai/agent/example";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { Skeleton } from "ui/skeleton";
 import { safe } from "ts-safe";
 import { handleErrorWithToast } from "ui/shared-toast";
@@ -88,12 +92,14 @@ const defaultConfig = (): PartialBy<
       systemPrompt: "",
       mentions: [],
     },
+    visibility: "private",
   };
 };
 
 export default function EditAgent({ id }: { id?: string }) {
   const t = useTranslations();
   const { theme } = useTheme();
+  const invalidateAgents = useInvalidateAgents();
   const [openGenerateAgentDialog, setOpenGenerateAgentDialog] = useState(false);
   const [generateModel, setGenerateModel] = useState<ChatModel | undefined>(
     appStore.getState().chatModel,
@@ -208,8 +214,9 @@ export default function EditAgent({ id }: { id?: string }) {
         }),
       )
       .ifOk(() => {
-        mutate(`/api/agent`);
-        router.push(`/`);
+        // Invalidate all agent-related caches
+        invalidateAgents();
+        router.push(`/agents`);
       })
       .ifFail(handleErrorWithToast)
       .watch(() => setIsSaving(false));
@@ -644,6 +651,75 @@ export default function EditAgent({ id }: { id?: string }) {
                 </div>
               </ChatMentionInputSuggestion>
             )}
+          </div>
+
+          {/* Visibility Controls */}
+          <div className="flex gap-2 flex-col">
+            <Label className="text-base">{t("Agent.visibility")}</Label>
+            <div className="flex flex-col gap-2">
+              <div
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  agent.visibility === "private"
+                    ? "bg-secondary border-primary"
+                    : "bg-secondary/40 border-transparent hover:bg-secondary",
+                )}
+                onClick={() => setAgent({ visibility: "private" })}
+              >
+                <Lock className="size-4" />
+                <div className="flex-1">
+                  <p className="font-medium">{t("Agent.private")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Agent.privateDescription")}
+                  </p>
+                </div>
+                {agent.visibility === "private" && (
+                  <div className="size-2 rounded-full bg-primary" />
+                )}
+              </div>
+
+              <div
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  agent.visibility === "readonly"
+                    ? "bg-secondary border-primary"
+                    : "bg-secondary/40 border-transparent hover:bg-secondary",
+                )}
+                onClick={() => setAgent({ visibility: "readonly" })}
+              >
+                <Eye className="size-4" />
+                <div className="flex-1">
+                  <p className="font-medium">{t("Agent.readOnly")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Agent.readOnlyDescription")}
+                  </p>
+                </div>
+                {agent.visibility === "readonly" && (
+                  <div className="size-2 rounded-full bg-primary" />
+                )}
+              </div>
+
+              <div
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  agent.visibility === "public"
+                    ? "bg-secondary border-primary"
+                    : "bg-secondary/40 border-transparent hover:bg-secondary",
+                )}
+                onClick={() => setAgent({ visibility: "public" })}
+              >
+                <Globe className="size-4" />
+                <div className="flex-1">
+                  <p className="font-medium">{t("Agent.public")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Agent.publicDescription")}
+                  </p>
+                </div>
+                {agent.visibility === "public" && (
+                  <div className="size-2 rounded-full bg-primary" />
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <div
