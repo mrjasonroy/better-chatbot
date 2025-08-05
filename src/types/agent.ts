@@ -1,5 +1,6 @@
 import z from "zod";
 import { ChatMention, ChatMentionSchema } from "./chat";
+import { VisibilitySchema } from "./util";
 
 export type AgentIcon = {
   type: "emoji";
@@ -23,21 +24,57 @@ export const AgentUpsertSchema = z.object({
     systemPrompt: z.string().optional(),
     mentions: z.array(ChatMentionSchema).optional(),
   }),
+  visibility: VisibilitySchema.optional(),
 });
 
-export type Agent = {
+export const AgentUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(8000).optional(),
+  icon: z
+    .object({
+      type: z.literal("emoji"),
+      value: z.string(),
+      style: z.record(z.string(), z.string()).optional(),
+    })
+    .optional(),
+  instructions: z
+    .object({
+      role: z.string().optional(),
+      systemPrompt: z.string().optional(),
+      mentions: z.array(ChatMentionSchema).optional(),
+    })
+    .optional(),
+  visibility: VisibilitySchema.optional(),
+});
+
+export const AgentQuerySchema = z.object({
+  type: z.enum(["all", "mine", "shared", "bookmarked"]).default("all"),
+  filters: z.string().optional(),
+  limit: z.coerce.number().min(1).max(100).default(50),
+});
+
+export type AgentVisibility = z.infer<typeof VisibilitySchema>;
+
+export type AgentSummary = {
   id: string;
   name: string;
   description?: string;
   icon?: AgentIcon;
   userId: string;
+  visibility: AgentVisibility;
+  createdAt: Date;
+  updatedAt: Date;
+  userName?: string;
+  userAvatar?: string;
+  isBookmarked?: boolean;
+};
+
+export type Agent = AgentSummary & {
   instructions: {
     role?: string;
     systemPrompt?: string;
     mentions?: ChatMention[];
   };
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 export type AgentRepository = {
@@ -47,13 +84,16 @@ export type AgentRepository = {
 
   selectAgentById(id: string, userId: string): Promise<Agent | null>;
 
-  selectAgentsByUserId(userId: string): Promise<Omit<Agent, "instructions">[]>;
+  selectAgentsByUserId(userId: string): Promise<Agent[]>;
 
   updateAgent(
     id: string,
     userId: string,
     agent: Partial<
-      Pick<Agent, "name" | "description" | "icon" | "instructions">
+      Pick<
+        Agent,
+        "name" | "description" | "icon" | "instructions" | "visibility"
+      >
     >,
   ): Promise<Agent>;
 
@@ -62,6 +102,18 @@ export type AgentRepository = {
   ): Promise<Agent>;
 
   deleteAgent(id: string, userId: string): Promise<void>;
+
+  selectAgents(
+    currentUserId: string,
+    filters?: ("all" | "mine" | "shared" | "bookmarked")[],
+    limit?: number,
+  ): Promise<AgentSummary[]>;
+
+  checkAccess(
+    agentId: string,
+    userId: string,
+    readOnly?: boolean,
+  ): Promise<boolean>;
 };
 
 export const AgentGenerateSchema = z.object({

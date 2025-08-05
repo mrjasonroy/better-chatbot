@@ -1,4 +1,4 @@
-import EditAgent from "@/components/edit-agent";
+import EditAgent from "@/components/agent/edit-agent";
 
 export default async function AgentPage({
   params,
