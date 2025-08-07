@@ -20,13 +20,38 @@ export const pgAgentRepository: AgentRepository = {
         updatedAt: new Date(),
       })
       .returning();
-    return result as Agent;
+
+    return {
+      ...result,
+      description: result.description ?? undefined,
+      icon: result.icon ?? undefined,
+      instructions: result.instructions ?? {},
+    };
   },
 
-  async selectAgentById(id, userId) {
+  async selectAgentById(id, userId): Promise<Agent | null> {
     const [result] = await db
-      .select()
+      .select({
+        id: AgentSchema.id,
+        name: AgentSchema.name,
+        description: AgentSchema.description,
+        icon: AgentSchema.icon,
+        userId: AgentSchema.userId,
+        instructions: AgentSchema.instructions,
+        visibility: AgentSchema.visibility,
+        createdAt: AgentSchema.createdAt,
+        updatedAt: AgentSchema.updatedAt,
+        isBookmarked: sql<boolean>`${BookmarkSchema.id} IS NOT NULL`,
+      })
       .from(AgentSchema)
+      .leftJoin(
+        BookmarkSchema,
+        and(
+          eq(BookmarkSchema.itemId, AgentSchema.id),
+          eq(BookmarkSchema.userId, userId),
+          eq(BookmarkSchema.itemType, "agent"),
+        ),
+      )
       .where(
         and(
           eq(AgentSchema.id, id),
@@ -37,7 +62,16 @@ export const pgAgentRepository: AgentRepository = {
           ),
         ),
       );
-    return result as Agent | null;
+
+    if (!result) return null;
+
+    return {
+      ...result,
+      description: result.description ?? undefined,
+      icon: result.icon ?? undefined,
+      instructions: result.instructions ?? {},
+      isBookmarked: result.isBookmarked ?? false,
+    };
   },
 
   async selectAgentsByUserId(userId) {
@@ -77,12 +111,18 @@ export const pgAgentRepository: AgentRepository = {
     const [result] = await db
       .update(AgentSchema)
       .set({
-        ...(agent as object),
+        ...agent,
         updatedAt: new Date(),
       })
       .where(and(eq(AgentSchema.id, id), eq(AgentSchema.userId, userId)))
       .returning();
-    return result as Agent;
+
+    return {
+      ...result,
+      description: result.description ?? undefined,
+      icon: result.icon ?? undefined,
+      instructions: result.instructions ?? {},
+    };
   },
 
   async upsertAgent(agent) {
@@ -111,7 +151,13 @@ export const pgAgentRepository: AgentRepository = {
         },
       })
       .returning();
-    return result as Agent;
+
+    return {
+      ...result,
+      description: result.description ?? undefined,
+      icon: result.icon ?? undefined,
+      instructions: result.instructions ?? {},
+    };
   },
 
   async deleteAgent(id, userId) {

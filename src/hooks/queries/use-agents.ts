@@ -85,9 +85,16 @@ export function useInvalidateAgents() {
   const { mutate } = useSWRConfig();
 
   return () => {
-    // Invalidate all agent-related caches
+    // Invalidate all agent list endpoints (with or without query strings)
+    // but not individual agent details (/api/agent/[id])
     mutate(
-      (key) => typeof key === "string" && key.startsWith("/api/agent"),
+      (key) => {
+        if (typeof key !== "string") return false;
+        // Match /api/agent or /api/agent?... but not /api/agent/id
+        return (
+          key.startsWith("/api/agent") && !key.match(/\/api\/agent\/[^/?]+/)
+        );
+      },
       undefined,
       { revalidate: true },
     );
