@@ -143,7 +143,7 @@ export const VerificationSchema = pgTable("verification", {
   ),
 });
 
-// Tool customization table for per-user additional AI instructions
+// Tool customization table for per-user additional instructions
 export const McpToolCustomizationSchema = pgTable(
   "mcp_server_tool_custom_instructions",
   {
