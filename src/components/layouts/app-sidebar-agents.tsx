@@ -178,7 +178,12 @@ export function AppSidebarAgents() {
                               </div>
 
                               <div className="flex items-center min-w-0 w-full">
-                                <p className="truncate">{agent.name}</p>
+                                <p
+                                  className="truncate"
+                                  data-testid={`sidebar-agent-name-${agent.id}`}
+                                >
+                                  {agent.name}
+                                </p>
                               </div>
                               <div
                                 onClick={(e) => {
@@ -220,7 +225,10 @@ export function AppSidebarAgents() {
                                 asChild
                                 className="data-[state=open]:bg-input! w-full"
                               >
-                                <div className="flex gap-1 w-full min-w-0">
+                                <div
+                                  className="flex gap-1 w-full min-w-0"
+                                  data-testid={`sidebar-bookmarked-agent-${agent.id}`}
+                                >
                                   <div
                                     className="p-1 rounded-full ring-2 ring-border bg-background"
                                     style={{
@@ -249,7 +257,12 @@ export function AppSidebarAgents() {
                                   </div>
 
                                   <div className="flex items-center min-w-0 w-full">
-                                    <p className="truncate">{agent.name}</p>
+                                    <p
+                                      className="truncate"
+                                      data-testid={`sidebar-bookmarked-agent-name-${agent.id}`}
+                                    >
+                                      {agent.name}
+                                    </p>
                                   </div>
                                   <div
                                     onClick={(e) => {

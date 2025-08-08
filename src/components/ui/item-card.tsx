@@ -47,16 +47,21 @@ export function ItemCard({
   const isBookmarked = (item as AgentSummary).isBookmarked;
 
   return (
-    <Link href={href} title={item.name} data-testid={`agent-card-${item.id}`}>
+    <Link
+      href={href}
+      title={item.name}
+      data-testid={`${type}-card-link-${item.id}`}
+    >
       <Card
         className={cn(
           "w-full min-h-[196px] @container transition-colors group flex flex-col gap-3 cursor-pointer hover:bg-input",
         )}
+        data-testid={`${type}-card-${item.id}`}
       >
         <CardHeader className="shrink gap-y-0">
           <CardTitle
             className="flex gap-3 items-start min-w-0"
-            data-testid={`agent-card-title`}
+            data-testid={`${type}-card-title-${item.id}`}
           >
             <div
               style={{ backgroundColor: item.icon?.style?.backgroundColor }}
@@ -69,7 +74,12 @@ export function ItemCard({
             </div>
 
             <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-              <span className="truncate font-medium">{item.name}</span>
+              <span
+                className="truncate font-medium"
+                data-testid={`${type}-card-name-${item.id}`}
+              >
+                {item.name}
+              </span>
               <div className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
                 <time className="shrink-0">
                   {format(item.updatedAt, "MMM d, yyyy")}
