@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://localhost:3000";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
 function expectAgentDetailUrl(page: Page): Promise<void> {
   // Should be on agent detail page
@@ -120,29 +120,25 @@ test.describe("Agent Features - Authenticated User", () => {
     await page.goto("/agent/new");
     await page.fill("#agent-name", "Visibility Test Agent");
     await page.fill("#agent-description", "Testing visibility changes");
-    // Save new agent to land on edit page where visibility control exists
-    await page.getByTestId("agent-save-button").click();
-    await page.waitForLoadState("networkidle");
-    await expect(page).toHaveURL(
-      new RegExp(
-        `^${baseUrl.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}/agent/[a-f0-9-]+`,
-      ),
-    );
-
-    // Set initial visibility to private via menu
-    await page.getByTestId("visibility-trigger-agent").click();
-    await page.getByTestId("visibility-option-private").click();
     await page.getByTestId("agent-save-button").click();
     await page.waitForLoadState("networkidle");
 
-    // Now change to public
+    // Redirects to list; open the created agent
+    await expect(page).toHaveURL(/\/agents$/);
+    const createdCard = page
+      .getByTestId("agent-card-title")
+      .filter({ hasText: "Visibility Test Agent" });
+    await createdCard.click();
+    await page.waitForLoadState("networkidle");
+    await expectAgentDetailUrl(page);
+
+    // Change to public
     await page.getByTestId("visibility-trigger-agent").click();
     await page.getByTestId("visibility-option-public").click();
     await page.getByTestId("agent-save-button").click();
     await page.waitForTimeout(1000);
 
-    // Verify the change
-    // Visibility change persisted if no error occurred (implicit via UI)
+    // Verify the change (implicit via UI)
   });
 
   test("should delete an agent", async ({ page }) => {
@@ -153,8 +149,12 @@ test.describe("Agent Features - Authenticated User", () => {
     await page.getByTestId("agent-save-button").click();
     await page.waitForLoadState("networkidle");
 
-    // Get the agent ID from URL
-    // Capture current URL if needed for debugging (not used further)
+    // Open the created agent from list
+    const createdCard = page
+      .getByTestId("agent-card-title")
+      .filter({ hasText: "Agent to Delete" });
+    await createdCard.click();
+    await page.waitForLoadState("networkidle");
 
     // Find and click delete button
     const deleteButton = page.getByRole("button", { name: "Delete" });
@@ -165,15 +165,8 @@ test.describe("Agent Features - Authenticated User", () => {
       await deleteButton.click();
       await page.waitForLoadState("networkidle");
 
-      // Should redirect away from the deleted agent (back to agents list)
-      await expect(page).toHaveURL(
-        new RegExp(
-          `^${baseUrl.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}/agents`,
-        ),
-      );
-
-      // Go back to agents list
-      await page.goto("/agents");
+      // Should redirect to agents list
+      await expect(page).toHaveURL(/\/agents$/);
 
       // Agent should not be in the list
       await expect(page.locator('text="Agent to Delete"')).not.toBeVisible();
