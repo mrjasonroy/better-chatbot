@@ -80,12 +80,14 @@ export function AppSidebarAgents() {
   );
 
   return (
-    <SidebarGroup>
+    <SidebarGroup data-testid="sidebar-agents">
       <SidebarGroupContent className="group-data-[collapsible=icon]:hidden group/agents">
         <SidebarMenu className="group/agents">
-          <SidebarMenuItem>
+          <SidebarMenuItem data-testid="sidebar-agents-header">
             <SidebarMenuButton asChild className="font-semibold">
-              <Link href="/agents">{t("Layout.agents")}</Link>
+              <Link href="/agents" data-testid="sidebar-agents-link">
+                {t("Layout.agents")}
+              </Link>
             </SidebarMenuButton>
             <SidebarMenuAction
               className="group-hover/agents:opacity-100 opacity-0 transition-opacity"
@@ -129,7 +131,10 @@ export function AppSidebarAgents() {
             </div>
           ) : (
             <>
-              <div className="h-[200px] w-full overflow-y-auto">
+              <div
+                className="h-[200px] w-full overflow-y-auto"
+                data-testid="sidebar-agents-list"
+              >
                 <div className="flex flex-col gap-1">
                   {myAgents?.map((agent, i) => {
                     return (
@@ -145,7 +150,10 @@ export function AppSidebarAgents() {
                             asChild
                             className="data-[state=open]:bg-input! w-full"
                           >
-                            <div className="flex gap-1 w-full min-w-0">
+                            <div
+                              className="flex gap-1 w-full min-w-0"
+                              data-testid={`sidebar-agent-${agent.id}`}
+                            >
                               <div
                                 className="p-1 rounded-full ring-2 ring-border bg-background"
                                 style={{

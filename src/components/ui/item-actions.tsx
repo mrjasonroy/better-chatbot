@@ -109,6 +109,7 @@ export function ItemActions({
                       variant="ghost"
                       size="icon"
                       className="size-8 text-muted-foreground hover:text-foreground"
+                      data-testid={`visibility-trigger-${type}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -120,11 +121,15 @@ export function ItemActions({
                 </TooltipTrigger>
                 <TooltipContent>Change visibility</TooltipContent>
               </Tooltip>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent
+                align="end"
+                data-testid={`visibility-menu-${type}`}
+              >
                 {visibilityItems.map((visibilityItem) => (
                   <DropdownMenuItem
                     key={visibilityItem.value}
                     disabled={visibility === visibilityItem.value}
+                    data-testid={`visibility-option-${visibilityItem.value}`}
                     onClick={() => onVisibilityChange(visibilityItem.value)}
                   >
                     {visibilityItem.icon}
@@ -166,6 +171,7 @@ export function ItemActions({
                 e.stopPropagation();
                 onBookmarkToggle(isBookmarked);
               }}
+              data-testid={`bookmark-trigger-${type}`}
             >
               {isBookmarked ? (
                 <BookmarkCheck className="size-4" />

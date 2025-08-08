@@ -278,7 +278,12 @@ export default function EditAgent({
               {t("Agent.generatingAgent")}
             </TextShimmer>
           ) : (
-            <p className="w-full text-2xl font-bold">{t("Agent.title")}</p>
+            <p
+              data-testid="agent-edit-title"
+              className="w-full text-2xl font-bold"
+            >
+              {t("Agent.title")}
+            </p>
           )}
 
           <div className="flex items-center gap-2">
@@ -323,35 +328,33 @@ export default function EditAgent({
               </>
             )}
 
-            {initialAgent && (
-              <div className="flex items-center gap-2">
-                {/* Bookmark button - only for non-owners */}
-                {!isOwner && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleBookmarkToggle}
-                    disabled={isLoading}
-                  >
-                    {isBookmarked ? (
-                      <BookmarkCheck className="size-4" />
-                    ) : (
-                      <Bookmark className="size-4" />
-                    )}
-                  </Button>
-                )}
+            <div className="flex items-center gap-2">
+              {/* Bookmark button - only for non-owners and when agent exists */}
+              {initialAgent && !isOwner && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleBookmarkToggle}
+                  disabled={isLoading}
+                >
+                  {isBookmarked ? (
+                    <BookmarkCheck className="size-4" />
+                  ) : (
+                    <Bookmark className="size-4" />
+                  )}
+                </Button>
+              )}
 
-                {/* Visibility dropdown - only for owners */}
-                {isOwner && (
-                  <ItemActions
-                    type="agent"
-                    visibility={agent.visibility || "private"}
-                    isOwner={true}
-                    onVisibilityChange={updateVisibility}
-                  />
-                )}
-              </div>
-            )}
+              {/* Visibility dropdown - allow choosing before first save too */}
+              {isOwner && (
+                <ItemActions
+                  type="agent"
+                  visibility={agent.visibility || "private"}
+                  isOwner={true}
+                  onVisibilityChange={updateVisibility}
+                />
+              )}
+            </div>
           </div>
         </div>
 
@@ -370,6 +373,7 @@ export default function EditAgent({
                 disabled={isLoading || !hasEditAccess}
                 className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
                 id="agent-name"
+                data-testid="agent-name-input"
                 placeholder={t("Agent.agentNamePlaceholder")}
                 readOnly={!hasEditAccess}
               />
@@ -395,6 +399,7 @@ export default function EditAgent({
           ) : (
             <Input
               id="agent-description"
+              data-testid="agent-description-input"
               disabled={isLoading || !hasEditAccess}
               placeholder={t("Agent.agentDescriptionPlaceholder")}
               className="hover:bg-input placeholder:text-xs bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
@@ -446,6 +451,7 @@ export default function EditAgent({
             ) : (
               <Textarea
                 id="agent-prompt"
+                data-testid="agent-prompt-textarea"
                 ref={textareaRef}
                 disabled={isLoading || !hasEditAccess}
                 placeholder={t("Agent.agentInstructionsPlaceholder")}
@@ -508,6 +514,7 @@ export default function EditAgent({
               className={cn("mt-2", !initialAgent || !isOwner ? "ml-auto" : "")}
               onClick={saveAgent}
               disabled={isLoading}
+              data-testid="agent-save-button"
             >
               {isSaving ? t("Common.saving") : t("Common.save")}
               {isSaving && <Loader className="size-4 animate-spin" />}

@@ -96,9 +96,11 @@ export function AgentsList({
   return (
     <div className="w-full flex flex-col gap-4 p-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t("Layout.agents")}</h1>
-        <Link href="/agent/new">
-          <Button>
+        <h1 data-testid="agents-title" className="text-2xl font-bold">
+          {t("Layout.agents")}
+        </h1>
+        <Link href="/agent/new" data-testid="agents-new-link">
+          <Button data-testid="agents-new-button">
             <Plus className="size-4 mr-2" />
             {t("Agent.newAgent")}
           </Button>
@@ -106,9 +108,14 @@ export function AgentsList({
       </div>
 
       {/* My Agents Section */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" data-testid="agents-section-mine">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">{t("Agent.myAgents")}</h2>
+          <h2
+            className="text-lg font-semibold"
+            data-testid="agents-heading-mine"
+          >
+            {t("Agent.myAgents")}
+          </h2>
           <div className="flex-1 h-px bg-border" />
         </div>
 
@@ -149,9 +156,17 @@ export function AgentsList({
       </div>
 
       {/* Shared Agents Section */}
-      <div className="flex flex-col gap-4 mt-8">
+      <div
+        className="flex flex-col gap-4 mt-8"
+        data-testid="agents-section-shared"
+      >
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">{t("Agent.sharedAgents")}</h2>
+          <h2
+            className="text-lg font-semibold"
+            data-testid="agents-heading-shared"
+          >
+            {t("Agent.sharedAgents")}
+          </h2>
           <div className="flex-1 h-px bg-border" />
         </div>
 
