@@ -9,7 +9,7 @@ import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { useWorkflowToolList } from "@/hooks/queries/use-workflow-tool-list";
 import { useObjectState } from "@/hooks/use-object-state";
 import { useBookmark } from "@/hooks/use-bookmark";
-import { Agent, AgentUpsertSchema } from "app-types/agent";
+import { Agent, AgentCreateSchema, AgentUpdateSchema } from "app-types/agent";
 import { ChatMention } from "app-types/chat";
 import { MCPServerInfo } from "app-types/mcp";
 import { WorkflowSummary } from "app-types/workflow";
@@ -156,39 +156,60 @@ export default function EditAgent({
   );
 
   const saveAgent = useCallback(() => {
-    setIsSaving(true);
-    safe(() => AgentUpsertSchema.parse({ ...agent, userId }))
-      .map(JSON.stringify)
-      .map(async (body) =>
-        fetcher(`/api/agent`, {
-          method: "POST",
-          body,
-        }),
-      )
-      .ifOk(() => {
-        invalidateAgents();
-        toast.success(initialAgent ? t("Agent.updated") : t("Agent.created"));
-        router.push(`/agents`);
-      })
-      .ifFail(handleErrorWithToast)
-      .watch(() => setIsSaving(false));
+    if (initialAgent) {
+      safe(() => AgentUpdateSchema.parse({ ...agent }))
+        .map(JSON.stringify)
+        .map(async (body) =>
+          fetcher(`/api/agent/${initialAgent.id}`, {
+            method: "PUT",
+            body,
+          }),
+        )
+        .ifOk(() => {
+          invalidateAgents();
+          toast.success(t("Agent.updated"));
+          router.push(`/agents`);
+        })
+        .ifFail(handleErrorWithToast)
+        .watch(() => setIsSaving(false));
+    } else {
+      setIsSaving(true);
+      safe(() => AgentCreateSchema.parse({ ...agent, userId }))
+        .map(JSON.stringify)
+        .map(async (body) =>
+          fetcher(`/api/agent`, {
+            method: "POST",
+            body,
+          }),
+        )
+        .ifOk(() => {
+          invalidateAgents();
+          toast.success(initialAgent ? t("Agent.updated") : t("Agent.created"));
+          router.push(`/agents`);
+        })
+        .ifFail(handleErrorWithToast)
+        .watch(() => setIsSaving(false));
+    }
   }, [agent, userId, invalidateAgents, router, initialAgent, t]);
 
   const updateVisibility = useCallback(
     async (visibility: Visibility) => {
       if (initialAgent?.id) {
-        try {
-          await fetcher(`/api/agent/${initialAgent.id}`, {
-            method: "PUT",
-            body: JSON.stringify({ visibility }),
-          });
-
-          setAgent({ visibility });
-          invalidateAgents();
-          toast.success("Visibility updated");
-        } catch (error) {
-          handleErrorWithToast(error as Error);
-        }
+        safe(() => AgentUpdateSchema.parse({ visibility }))
+          .map(JSON.stringify)
+          .map(async (body) =>
+            fetcher(`/api/agent/${initialAgent.id}`, {
+              method: "PUT",
+              body,
+            }),
+          )
+          .ifOk(() => {
+            setAgent({ visibility });
+            invalidateAgents();
+            toast.success("Visibility updated");
+          })
+          .ifFail(handleErrorWithToast)
+          .watch(() => setIsSaving(false));
       } else {
         setAgent({ visibility });
       }

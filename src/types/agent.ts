@@ -1,5 +1,5 @@
 import z from "zod";
-import { ChatMention, ChatMentionSchema } from "./chat";
+import { ChatMentionSchema } from "./chat";
 import { VisibilitySchema } from "./util";
 
 export type AgentIcon = {
@@ -8,44 +8,43 @@ export type AgentIcon = {
   style?: Record<string, string>;
 };
 
-export const AgentUpsertSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1).max(100),
-  description: z.string().max(8000).optional(),
-  icon: z
-    .object({
-      type: z.literal("emoji"),
-      value: z.string(),
-      style: z.record(z.string(), z.string()).optional(),
-    })
-    .optional(),
-  instructions: z.object({
-    role: z.string().optional(),
-    systemPrompt: z.string().optional(),
-    mentions: z.array(ChatMentionSchema).optional(),
-  }),
-  visibility: VisibilitySchema.optional(),
+export const AgentInstructionsSchema = z.object({
+  role: z.string().optional(),
+  systemPrompt: z.string().optional(),
+  mentions: z.array(ChatMentionSchema).optional(),
 });
 
-export const AgentUpdateSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().max(8000).optional(),
-  icon: z
-    .object({
-      type: z.literal("emoji"),
-      value: z.string(),
-      style: z.record(z.string(), z.string()).optional(),
-    })
-    .optional(),
-  instructions: z
-    .object({
-      role: z.string().optional(),
-      systemPrompt: z.string().optional(),
-      mentions: z.array(ChatMentionSchema).optional(),
-    })
-    .optional(),
-  visibility: VisibilitySchema.optional(),
-});
+export const AgentCreateSchema = z
+  .object({
+    name: z.string().min(1).max(100),
+    description: z.string().max(8000).optional(),
+    icon: z
+      .object({
+        type: z.literal("emoji"),
+        value: z.string(),
+        style: z.record(z.string(), z.string()).optional(),
+      })
+      .optional(),
+    userId: z.string(),
+    instructions: AgentInstructionsSchema,
+    visibility: VisibilitySchema.optional().default("private"),
+  })
+  .strip();
+export const AgentUpdateSchema = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().max(8000).optional(),
+    icon: z
+      .object({
+        type: z.literal("emoji"),
+        value: z.string(),
+        style: z.record(z.string(), z.string()).optional(),
+      })
+      .optional(),
+    instructions: AgentInstructionsSchema.optional(),
+    visibility: VisibilitySchema.optional(),
+  })
+  .strip();
 
 export const AgentQuerySchema = z.object({
   type: z.enum(["all", "mine", "shared", "bookmarked"]).default("all"),
@@ -70,17 +69,11 @@ export type AgentSummary = {
 };
 
 export type Agent = AgentSummary & {
-  instructions: {
-    role?: string;
-    systemPrompt?: string;
-    mentions?: ChatMention[];
-  };
+  instructions: z.infer<typeof AgentInstructionsSchema>;
 };
 
 export type AgentRepository = {
-  insertAgent(
-    agent: Omit<Agent, "id" | "createdAt" | "updatedAt">,
-  ): Promise<Agent>;
+  insertAgent(agent: z.infer<typeof AgentCreateSchema>): Promise<Agent>;
 
   selectAgentById(id: string, userId: string): Promise<Agent | null>;
 
@@ -89,16 +82,7 @@ export type AgentRepository = {
   updateAgent(
     id: string,
     userId: string,
-    agent: Partial<
-      Pick<
-        Agent,
-        "name" | "description" | "icon" | "instructions" | "visibility"
-      >
-    >,
-  ): Promise<Agent>;
-
-  upsertAgent(
-    agent: Omit<Agent, "id" | "createdAt" | "updatedAt"> & { id?: string },
+    agent: z.infer<typeof AgentUpdateSchema>,
   ): Promise<Agent>;
 
   deleteAgent(id: string, userId: string): Promise<void>;
@@ -112,7 +96,7 @@ export type AgentRepository = {
   checkAccess(
     agentId: string,
     userId: string,
-    readOnly?: boolean,
+    destructive?: boolean,
   ): Promise<boolean>;
 };
 
