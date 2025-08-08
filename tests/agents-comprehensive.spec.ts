@@ -58,7 +58,11 @@ async function createAgent(
   const visibilityTrigger = page.getByTestId("visibility-trigger-agent");
   if (await visibilityTrigger.count()) {
     await visibilityTrigger.click();
-    await page.getByTestId(`visibility-option-${visibility}`).click();
+    const option = page.getByTestId(`visibility-option-${visibility}`);
+    // Some options can be disabled if already selected; choose only when enabled
+    if (await option.isEnabled()) {
+      await option.click();
+    }
   }
 
   // Save the agent
