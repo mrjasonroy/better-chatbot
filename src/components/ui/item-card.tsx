@@ -47,14 +47,17 @@ export function ItemCard({
   const isBookmarked = (item as AgentSummary).isBookmarked;
 
   return (
-    <Link href={href} title={item.name}>
+    <Link href={href} title={item.name} data-testid={`agent-card-${item.id}`}>
       <Card
         className={cn(
           "w-full min-h-[196px] @container transition-colors group flex flex-col gap-3 cursor-pointer hover:bg-input",
         )}
       >
         <CardHeader className="shrink gap-y-0">
-          <CardTitle className="flex gap-3 items-start min-w-0">
+          <CardTitle
+            className="flex gap-3 items-start min-w-0"
+            data-testid={`agent-card-title`}
+          >
             <div
               style={{ backgroundColor: item.icon?.style?.backgroundColor }}
               className="p-2 rounded-lg flex items-center justify-center ring ring-background border shrink-0"
