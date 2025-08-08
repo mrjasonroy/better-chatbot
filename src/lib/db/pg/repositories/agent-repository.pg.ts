@@ -114,42 +114,16 @@ export const pgAgentRepository: AgentRepository = {
         ...agent,
         updatedAt: new Date(),
       })
-      .where(and(eq(AgentSchema.id, id), eq(AgentSchema.userId, userId)))
-      .returning();
-
-    return {
-      ...result,
-      description: result.description ?? undefined,
-      icon: result.icon ?? undefined,
-      instructions: result.instructions ?? {},
-    };
-  },
-
-  async upsertAgent(agent) {
-    const [result] = await db
-      .insert(AgentSchema)
-      .values({
-        id: agent.id || generateUUID(),
-        name: agent.name,
-        description: agent.description,
-        icon: agent.icon,
-        userId: agent.userId,
-        instructions: agent.instructions,
-        visibility: agent.visibility || "private",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [AgentSchema.id],
-        set: {
-          name: agent.name,
-          description: agent.description,
-          icon: agent.icon,
-          instructions: agent.instructions,
-          visibility: agent.visibility,
-          updatedAt: new Date(),
-        },
-      })
+      .where(
+        and(
+          // Only allow updates to agents owned by the user or public agents
+          eq(AgentSchema.id, id),
+          or(
+            eq(AgentSchema.userId, userId),
+            eq(AgentSchema.visibility, "public"),
+          ),
+        ),
+      )
       .returning();
 
     return {
@@ -261,7 +235,7 @@ export const pgAgentRepository: AgentRepository = {
     }));
   },
 
-  async checkAccess(agentId, userId, readOnly = true) {
+  async checkAccess(agentId, userId, destructive = false) {
     const [agent] = await db
       .select({
         visibility: AgentSchema.visibility,
@@ -273,10 +247,7 @@ export const pgAgentRepository: AgentRepository = {
       return false;
     }
     if (userId == agent.userId) return true;
-    if (agent.visibility === "private") {
-      return false;
-    }
-    if (agent.visibility == "readonly" && !readOnly) return false;
-    return true;
+    if (agent.visibility === "public" && !destructive) return true;
+    return false;
   },
 };
