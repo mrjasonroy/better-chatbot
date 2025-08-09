@@ -44,6 +44,7 @@ export class MCPClientsManager {
     {
       client: MCPClient;
       name: string;
+      isFileBased?: boolean;
     }
   >();
   private initializedLock = new Locker();
@@ -90,9 +91,10 @@ export class MCPClientsManager {
           await this.storage.init(this);
           const configs = await this.storage.loadAll();
           await Promise.all(
-            configs.map(({ id, name, config }) =>
-              this.addClient(id, name, config).catch(() => {
-                `ignore error`;
+            configs.map(({ id, name, config, isFileBased }) =>
+              this.addClient(id, name, config, isFileBased).catch((err) => {
+                this.logger.error(`Failed to add client ${name} (${id}):`, err);
+                // Continue with other clients
               }),
             ),
           );
@@ -103,6 +105,17 @@ export class MCPClientsManager {
         this.initialized = true;
       })
       .unwrap();
+  }
+
+  /**
+   * Load all server configurations from storage
+   */
+  async loadAll(): Promise<McpServerSelect[]> {
+    await this.waitInitialized();
+    if (this.storage) {
+      return this.storage.loadAll();
+    }
+    return [];
   }
 
   /**
@@ -150,7 +163,12 @@ export class MCPClientsManager {
   /**
    * Creates and adds a new client instance to memory only (no storage persistence)
    */
-  async addClient(id: string, name: string, serverConfig: MCPServerConfig) {
+  async addClient(
+    id: string,
+    name: string,
+    serverConfig: MCPServerConfig,
+    isFileBased?: boolean,
+  ) {
     if (this.clients.has(id)) {
       const prevClient = this.clients.get(id)!;
       void prevClient.client.disconnect();
@@ -158,8 +176,19 @@ export class MCPClientsManager {
     const client = createMCPClient(id, name, serverConfig, {
       autoDisconnectSeconds: this.autoDisconnectSeconds,
     });
-    this.clients.set(id, { client, name });
-    return client.connect();
+    this.clients.set(id, { client, name, isFileBased });
+
+    // Add timeout to prevent hanging on broken servers
+    return Promise.race([
+      client.connect(),
+      new Promise((_, reject) =>
+        setTimeout(
+          () =>
+            reject(new Error(`Client ${name} connection timeout after 30s`)),
+          30000,
+        ),
+      ),
+    ]);
   }
 
   /**
@@ -171,7 +200,7 @@ export class MCPClientsManager {
       const entity = await this.storage.save(server);
       id = entity.id;
     }
-    await this.addClient(id, server.name, server.config).catch((err) => {
+    await this.addClient(id, server.name, server.config, false).catch((err) => {
       if (!server.id) {
         void this.removeClient(id);
       }
@@ -211,7 +240,7 @@ export class MCPClientsManager {
       throw new Error(`Client ${id} not found`);
     }
     this.logger.info(`Refreshing client ${server.name}`);
-    await this.addClient(id, server.name, server.config);
+    await this.addClient(id, server.name, server.config, server.isFileBased);
     return this.clients.get(id)!;
   }
 
@@ -227,6 +256,10 @@ export class MCPClientsManager {
       id,
       client: client,
     }));
+  }
+
+  getClientData(id: string) {
+    return this.clients.get(id);
   }
   async getClient(id: string) {
     await this.waitInitialized();

@@ -8,9 +8,11 @@ import { mcpOAuthRepository, mcpRepository } from "lib/db/repository";
 export async function selectMcpClientsAction() {
   const list = await mcpClientsManager.getClients();
   return list.map(({ client, id }) => {
+    const clientData = mcpClientsManager.getClientData(id);
     return {
       ...client.getInfo(),
       id,
+      isFileBased: clientData?.isFileBased,
     };
   });
 }
