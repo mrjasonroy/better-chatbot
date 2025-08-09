@@ -149,6 +149,7 @@ describe("File-based MCP Config Storage", () => {
           id: "test-server",
           name: "test-server",
           config: mockServerConfig,
+          isFileBased: true,
         }),
       );
     });
@@ -196,7 +197,12 @@ describe("File-based MCP Config Storage", () => {
         expect.stringContaining('"new-server"'),
         "utf-8",
       );
-      expect(result).toEqual(expect.objectContaining(serverToSave));
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...serverToSave,
+          isFileBased: true,
+        }),
+      );
     });
 
     it("should create directory if it doesn't exist", async () => {
@@ -274,6 +280,7 @@ describe("File-based MCP Config Storage", () => {
           id: "test-server",
           name: "test-server",
           config: mockServerConfig,
+          isFileBased: true,
         }),
       );
     });
@@ -342,11 +349,13 @@ describe("File-based MCP Config Storage", () => {
           id: "server1",
           name: "server1",
           enabled: true,
+          isFileBased: true,
         }),
       );
       expect(result[1]).toEqual(
         expect.objectContaining({
           id: "server2",
+          isFileBased: true,
           name: "server2",
           enabled: true,
         }),

@@ -13,6 +13,10 @@ export const IS_MCP_SERVER_REMOTE_ONLY = IS_VERCEL_ENV;
 export const FILE_BASED_MCP_CONFIG =
   process.env.FILE_BASED_MCP_CONFIG === "true";
 
+export const MCP_DEFAULT_SERVERS_ENABLED =
+  process.env.MCP_DEFAULT_SERVERS_ENABLED === "true" ||
+  process.env.DEFAULT_MCP_SERVERS_ENABLED === "true"; // Backwards compatibility
+
 export const COOKIE_KEY_SIDEBAR_STATE = "sidebar:state";
 export const COOKIE_KEY_LOCALE = "i18n:locale";
 

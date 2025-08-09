@@ -44,6 +44,7 @@ export type MCPServerInfo = {
   error?: unknown;
   status: "connected" | "disconnected" | "loading" | "authorizing";
   toolInfo: MCPToolInfo[];
+  isFileBased?: boolean;
 };
 
 export type McpServerInsert = {
@@ -55,6 +56,7 @@ export type McpServerSelect = {
   name: string;
   config: MCPServerConfig;
   id: string;
+  isFileBased?: boolean;
 };
 
 export type VercelAIMcpTool = Tool & {

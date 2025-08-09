@@ -1,10 +1,21 @@
 import { MCPServerInfo } from "app-types/mcp";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { mcpRepository } from "lib/db/repository";
+import { sanitizeMcpConfig } from "lib/ai/mcp/sanitize-config";
+import { MCP_DEFAULT_SERVERS_ENABLED, FILE_BASED_MCP_CONFIG } from "lib/const";
 
 export async function GET() {
+  // Use storage abstraction for hybrid/file modes, direct DB access for database-only mode (like main)
+  const getServers = () => {
+    if (FILE_BASED_MCP_CONFIG || MCP_DEFAULT_SERVERS_ENABLED) {
+      return mcpClientsManager.loadAll(); // Hybrid/file modes need storage abstraction
+    } else {
+      return mcpRepository.selectAll(); // Database-only mode like main branch
+    }
+  };
+
   const [servers, memoryClients] = await Promise.all([
-    mcpRepository.selectAll(),
+    getServers(),
     mcpClientsManager.getClients(),
   ]);
 
@@ -38,10 +49,11 @@ export async function GET() {
     const mcpInfo: MCPServerInfo & { id: string } = {
       id: server.id,
       name: server.name,
-      config: server.config,
+      config: sanitizeMcpConfig(server.config), // Sanitize sensitive data
       status: info?.status ?? "loading",
       error: info?.error,
       toolInfo: info?.toolInfo ?? [],
+      isFileBased: server.isFileBased, // Use server's isFileBased flag
     };
     return mcpInfo;
   });

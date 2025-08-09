@@ -44,6 +44,7 @@ export const MCPCard = memo(function MCPCard({
   status,
   name,
   toolInfo,
+  isFileBased,
 }: MCPServerInfo & { id: string }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const t = useTranslations("MCP");
@@ -103,6 +104,11 @@ export const MCPCard = memo(function MCPCard({
 
         <h4 className="font-bold text-xs sm:text-lg flex items-center gap-1">
           {name}
+          {isFileBased && (
+            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-200">
+              Default
+            </span>
+          )}
         </h4>
         <div className="flex-1" />
         {needsAuthorization && (
@@ -127,32 +133,34 @@ export const MCPCard = memo(function MCPCard({
             </div>
           </>
         )}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={isDisabled}
-              onClick={() =>
-                appStoreMutate({
-                  mcpCustomizationPopup: {
-                    id,
-                    name,
-                    config,
-                    status,
-                    toolInfo,
-                    error,
-                  },
-                })
-              }
-            >
-              <Settings2 className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("mcpServerCustomization")}</p>
-          </TooltipContent>
-        </Tooltip>
+        {!isFileBased && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={isDisabled}
+                onClick={() =>
+                  appStoreMutate({
+                    mcpCustomizationPopup: {
+                      id,
+                      name,
+                      config,
+                      status,
+                      toolInfo,
+                      error,
+                    },
+                  })
+                }
+              >
+                <Settings2 className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("mcpServerCustomization")}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         <Tooltip>
           <TooltipTrigger asChild>
@@ -195,36 +203,40 @@ export const MCPCard = memo(function MCPCard({
             <p>{t("refresh")}</p>
           </TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              disabled={isLoading}
-            >
-              <Trash className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("delete")}</p>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={`/mcp/modify/${encodeURIComponent(id)}`}
-              className="cursor-pointer"
-            >
-              <Button variant="ghost" size="icon">
-                <Pencil className="size-3.5" />
-              </Button>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("edit")}</p>
-          </TooltipContent>
-        </Tooltip>
+        {!isFileBased && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                >
+                  <Trash className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("delete")}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/mcp/modify/${encodeURIComponent(id)}`}
+                  className="cursor-pointer"
+                >
+                  <Button variant="ghost" size="icon">
+                    <Pencil className="size-3.5" />
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("edit")}</p>
+              </TooltipContent>
+            </Tooltip>
+          </>
+        )}
       </CardHeader>
 
       {errorMessage && <ErrorAlert error={errorMessage} />}

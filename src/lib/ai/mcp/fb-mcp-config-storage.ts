@@ -8,11 +8,11 @@ import type {
 import chokidar from "chokidar";
 import type { FSWatcher } from "chokidar";
 import { createDebounce } from "lib/utils";
-import equal from "lib/equal";
 import defaultLogger from "logger";
 import { MCP_CONFIG_PATH } from "lib/ai/mcp/config-path";
 import { colorize } from "consola/utils";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
+import { checkAndRefreshMCPClients } from "./utils";
 
 const logger = defaultLogger.withDefaults({
   message: colorize("gray", `MCP File Config Storage: `),
@@ -66,61 +66,8 @@ export function createFileBasedMCPConfigsStorage(
   }
 
   async function checkAndRefreshClients() {
-    try {
-      logger.debug("Checking MCP clients Diff");
-      const fileConfig = await readConfigFile();
-
-      const fileConfigs = fileConfig.sort((a, b) => a.id.localeCompare(b.id));
-
-      // Get current manager configs
-      const managerConfigs = await manager
-        .getClients()
-        .then((clients) =>
-          clients.map(({ client, id }) => ({
-            id,
-            name: client.getInfo().name,
-            config: client.getInfo().config,
-          })),
-        )
-        .then((configs) =>
-          configs.sort((a, b) => a.name.localeCompare(b.name)),
-        );
-
-      let shouldRefresh = false;
-      if (fileConfigs.length !== managerConfigs.length) {
-        shouldRefresh = true;
-      } else if (!equal(fileConfigs, managerConfigs)) {
-        shouldRefresh = true;
-      }
-
-      if (shouldRefresh) {
-        const refreshPromises = fileConfigs.map(
-          async ({ id, name, config }) => {
-            const managerConfig = await manager.getClient(id);
-            if (!managerConfig) {
-              logger.debug(`Adding MCP client ${id}`);
-              return manager.addClient(id, name, config);
-            }
-            if (!equal(managerConfig.client.getInfo().config, config)) {
-              logger.debug(`Refreshing MCP client ${id}`);
-              return manager.refreshClient(id);
-            }
-          },
-        );
-        const deletePromises = managerConfigs
-          .filter((c) => {
-            const fileConfig = fileConfigs.find((c2) => c2.id === c.id);
-            return !fileConfig;
-          })
-          .map((c) => {
-            logger.debug(`Removing MCP client ${c.id}`);
-            return manager.removeClient(c.id);
-          });
-        await Promise.allSettled([...refreshPromises, ...deletePromises]);
-      }
-    } catch (err) {
-      logger.error("Error checking and refreshing clients:", err);
-    }
+    const fileConfig = await readConfigFile();
+    await checkAndRefreshMCPClients(fileConfig, manager, logger);
   }
 
   /**
@@ -190,19 +137,20 @@ export function createFileBasedMCPConfigsStorage(
 
 function fillMcpServerSchema(
   server: typeof McpServerSchema.$inferInsert,
-): typeof McpServerSchema.$inferSelect {
+): typeof McpServerSchema.$inferSelect & { isFileBased: boolean } {
   return {
     ...server,
     id: server.name,
     enabled: true,
     createdAt: new Date(),
     updatedAt: new Date(),
+    isFileBased: true,
   };
 }
 
 function toMcpServerArray(
   config: Record<string, MCPServerConfig>,
-): (typeof McpServerSchema.$inferSelect)[] {
+): (typeof McpServerSchema.$inferSelect & { isFileBased: boolean })[] {
   return Object.entries(config).map(([name, config]) =>
     fillMcpServerSchema({
       id: name,

@@ -54,26 +54,18 @@ export default function MCPDashboard({ message }: { message?: string }) {
     setShowValidating(false);
   }, [isValidating]);
 
-  const particle = useMemo(() => {
-    if (isLoading || mcpList?.length !== 0) return;
-    return (
-      <>
-        <div className="absolute opacity-30 pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
-          <LightRays className="bg-transparent" />
-        </div>
+  const showParticle = useMemo(() => {
+    if (isLoading || mcpList?.length !== 0) return false;
+    return true;
+  }, [isLoading, mcpList]);
 
-        <div className="absolute pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
-          <div className="w-full h-full bg-gradient-to-t from-background to-50% to-transparent z-20" />
-        </div>
-        <div className="absolute pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
-          <div className="w-full h-full bg-gradient-to-l from-background to-20% to-transparent z-20" />
-        </div>
-        <div className="absolute pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
-          <div className="w-full h-full bg-gradient-to-r from-background to-20% to-transparent z-20" />
-        </div>
-      </>
-    );
-  }, [isLoading, mcpList.length]);
+  useEffect(() => {
+    if (message) {
+      toast(<p className="whitespace-pre-wrap break-all">{message}</p>, {
+        id: "mcp-list-message",
+      });
+    }
+  }, []);
 
   const handleScroll = useCallback((e: Event) => {
     const target = e.target as HTMLElement;
@@ -90,22 +82,31 @@ export default function MCPDashboard({ message }: { message?: string }) {
     }
   }, [handleScroll]);
 
-  useEffect(() => {
-    if (message) {
-      toast(<p className="whitespace-pre-wrap break-all">{message}</p>, {
-        id: "mcp-list-message",
-      });
-    }
-  }, []);
-
   return (
     <>
-      {particle}
-      <ScrollArea ref={scrollRef} className="h-full w-full z-40">
+      {showParticle && (
+        <>
+          <div className="absolute opacity-30 pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+            <LightRays className="bg-transparent" />
+          </div>
+
+          <div className="absolute pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+            <div className="w-full h-full bg-gradient-to-t from-background to-50% to-transparent z-20" />
+          </div>
+          <div className="absolute pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+            <div className="w-full h-full bg-gradient-to-l from-background to-20% to-transparent z-20" />
+          </div>
+          <div className="absolute pointer-events-none top-0 left-0 w-full h-full z-10 fade-in animate-in duration-5000">
+            <div className="w-full h-full bg-gradient-to-r from-background to-20% to-transparent z-20" />
+          </div>
+        </>
+      )}
+      <ScrollArea className="h-full w-full z-40">
         <div className="flex-1 relative flex flex-col gap-4 px-8 max-w-3xl h-full mx-auto pb-8">
           <div
             className={cn(
-              "flex items-center sticky top-0 bg-background z-50 pb-8",
+              "flex items-center sticky top-0 z-50 pb-8",
+              !showParticle && "bg-background",
               isScrolled && "border-b",
             )}
           >
