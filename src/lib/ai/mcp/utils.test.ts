@@ -275,11 +275,21 @@ describe("MCP Utils", () => {
         getClients: vi.fn().mockResolvedValue([
           {
             id: "server1",
-            client: { getInfo: () => ({ name: "Server 1", config: {} }) },
+            client: {
+              getInfo: () => ({
+                name: "Server 1",
+                config: { url: "http://test.url" },
+              }),
+            },
           },
           {
             id: "server2",
-            client: { getInfo: () => ({ name: "Server 2", config: {} }) },
+            client: {
+              getInfo: () => ({
+                name: "Server 2",
+                config: { url: "http://test2.url" },
+              }),
+            },
           },
         ]),
         removeClient: vi.fn().mockResolvedValue(undefined),
@@ -295,7 +305,7 @@ describe("MCP Utils", () => {
         {
           id: "server1",
           name: "Server 1",
-          config: {},
+          config: { url: "http://test.url" },
           isFileBased: false,
         },
         // server2 is missing - should be removed
