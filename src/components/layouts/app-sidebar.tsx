@@ -72,7 +72,7 @@ export function AppSidebar({
                   router.refresh();
                 }}
               >
-                <h4 className="font-bold">better-chatbot</h4>
+                <h4 className="font-bold">CNAI Chat</h4>
                 <div
                   className="ml-auto block sm:hidden"
                   onClick={(e) => {
