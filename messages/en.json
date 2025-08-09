@@ -178,7 +178,7 @@
       "createAccount": "Create account"
     },
     "Intro": {
-      "description": "Welcome to better-chatbot. Sign in to experience our AI-powered conversational tools."
+      "description": "Welcome to CNAI. Sign in to experience our AI-powered conversational tools."
     }
   },
   "Chat": {
@@ -382,7 +382,7 @@
     "generateAgentGreeting": "Hello! I'll help you create your own agent. What would you like to create?",
     "generateAgentDetailedGreeting": "Hello! I'll help you create your own agent. What would you like to create? You can write briefly or in detail.",
     "inputPromptHere": "input prompt here...",
-    "agentNamePlaceholder": "better-agent",
+    "agentNamePlaceholder": "cnai-agent",
     "myAgents": "My Agents",
     "sharedAgents": "Shared Agents",
     "noAgents": "No agents yet",
