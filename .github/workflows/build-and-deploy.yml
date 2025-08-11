@@ -13,6 +13,7 @@ on:
 
 env:
   REGISTRY: docker.io
+  DOCKER_ORG: globalspecllc
   IMAGE_NAME: better-chatbot
 
 jobs:
@@ -38,8 +39,8 @@ jobs:
           CURRENT_COMMIT_HASH=$(git show -s --format=%h HEAD)
           APP_VERSION="${CURRENT_COMMIT_DATE}.${COMMIT_COUNT}.${CURRENT_COMMIT_HASH}"
 
-          # Docker tag format - you'll need to update the Docker Hub username
-          DOCKER_TAG="${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${APP_VERSION}"
+          # Docker tag format
+          DOCKER_TAG="${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${APP_VERSION}"
 
           echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
           echo "docker_tag=${DOCKER_TAG}" >> $GITHUB_OUTPUT
@@ -79,18 +80,18 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}
-            ${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}
+            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
             APP_VERSION=${{ needs.set-versions.outputs.app_version }}
             GIT_HASH=${{ needs.set-versions.outputs.git_hash }}
             DOCKER_BUILD=1
           cache-from: |
             type=gha
-            type=registry,ref=${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:cache
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:cache
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:cache,mode=max
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:cache,mode=max
 
   update-helm-chart:
     needs: [set-versions, build-and-publish]
@@ -133,7 +134,7 @@ jobs:
             echo "✅ Docker image built and published" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Docker Image:**" >> $GITHUB_STEP_SUMMARY
-            echo "${{ env.REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}" >> $GITHUB_STEP_SUMMARY
+            echo "${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🚀 Ready for deployment!" >> $GITHUB_STEP_SUMMARY
