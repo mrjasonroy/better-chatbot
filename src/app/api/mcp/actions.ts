@@ -4,12 +4,15 @@ import { z } from "zod";
 
 import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { mcpOAuthRepository, mcpRepository } from "lib/db/repository";
+import { processMcpConfigForResponse } from "lib/utils/secure-config";
 
 export async function selectMcpClientsAction() {
   const list = await mcpClientsManager.getClients();
   return list.map(({ client, id }) => {
+    const info = client.getInfo();
     return {
-      ...client.getInfo(),
+      ...info,
+      config: processMcpConfigForResponse(info.config),
       id,
     };
   });
@@ -20,8 +23,10 @@ export async function selectMcpClientAction(id: string) {
   if (!client) {
     throw new Error("Client not found");
   }
+  const info = client.client.getInfo();
   return {
-    ...client.client.getInfo(),
+    ...info,
+    config: processMcpConfigForResponse(info.config),
     id,
   };
 }

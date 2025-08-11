@@ -9,6 +9,7 @@ import {
   type MCPServerConfig,
   type MCPToolInfo,
 } from "app-types/mcp";
+import { substituteEnvVars } from "lib/utils/secure-config";
 
 import { isMaybeRemoteConfig, isMaybeStdioConfig } from "./is-mcp-config";
 import logger from "logger";
@@ -180,7 +181,9 @@ export class MCPClient {
           throw new Error("VERCEL: Stdio transport is not supported");
         }
 
-        const config = MCPStdioConfigZodSchema.parse(this.serverConfig);
+        const config = MCPStdioConfigZodSchema.parse(
+          substituteEnvVars(this.serverConfig),
+        );
         this.transport = new StdioClientTransport({
           command: config.command,
           args: config.args,
@@ -199,7 +202,9 @@ export class MCPClient {
 
         await withTimeout(client.connect(this.transport), CONNET_TIMEOUT);
       } else if (isMaybeRemoteConfig(this.serverConfig)) {
-        const config = MCPRemoteConfigZodSchema.parse(this.serverConfig);
+        const config = MCPRemoteConfigZodSchema.parse(
+          substituteEnvVars(this.serverConfig),
+        );
         const abortController = new AbortController();
         const url = new URL(config.url);
         try {
