@@ -15,6 +15,7 @@ import {
   generateDeterministicUUID,
   substituteEnvVarsInObject,
   checkAndRefreshMCPClients,
+  syncFileBasedServersToDatabase,
 } from "./utils";
 
 const logger = defaultLogger.withDefaults({
@@ -71,6 +72,10 @@ export function createHybridMCPConfigStorage(
       readDefaultConfigFile(),
       loadUserServers(),
     ]);
+
+    // Sync file-based servers to database for OAuth support
+    await syncFileBasedServersToDatabase(defaultServers, logger);
+
     return [...defaultServers, ...userServers];
   }
 

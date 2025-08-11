@@ -36,6 +36,10 @@ vi.mock("lib/ai/mcp/config-path", () => ({
   MCP_CONFIG_PATH: "/test/config.json",
 }));
 
+vi.mock("./utils", () => ({
+  syncFileBasedServersToDatabase: vi.fn(),
+}));
+
 const mockReadFile = vi.mocked(readFile);
 const mockWriteFile = vi.mocked(writeFile);
 const mockMkdir = vi.mocked(mkdir);
@@ -171,6 +175,28 @@ describe("File-based MCP Config Storage", () => {
       const result = await storage.loadAll();
 
       expect(result).toEqual([]);
+    });
+
+    it("should sync file-based servers to database for OAuth support", async () => {
+      const { syncFileBasedServersToDatabase } = await import("./utils");
+      const mockSync = vi.mocked(syncFileBasedServersToDatabase);
+
+      const configContent = JSON.stringify({
+        "test-server": mockServerConfig,
+        "api-server": { url: "https://example.com" },
+      });
+
+      mockReadFile.mockResolvedValue(configContent);
+
+      await storage.loadAll();
+
+      // Verify sync was called with file-based servers
+      expect(mockSync).toHaveBeenCalledOnce();
+      const [fileBasedServers, logger] = mockSync.mock.calls[0];
+
+      expect(fileBasedServers).toHaveLength(2); // test-server and api-server
+      expect(fileBasedServers.every((s: any) => s.isFileBased)).toBe(true);
+      expect(logger).toBeDefined();
     });
   });
 

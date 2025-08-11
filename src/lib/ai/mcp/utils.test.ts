@@ -5,6 +5,18 @@ import {
   substituteEnvVarsInObject,
 } from "./utils";
 
+// Mock the mcpRepository module
+vi.mock("lib/db/repository", () => ({
+  mcpRepository: {
+    selectAll: vi.fn(),
+    save: vi.fn(),
+    deleteById: vi.fn(),
+  },
+}));
+
+// Import after mocking
+const { syncFileBasedServersToDatabase } = await import("./utils");
+
 describe("MCP Utils", () => {
   describe("generateDeterministicUUID", () => {
     it("should generate a valid UUID v4 format", () => {
@@ -363,6 +375,303 @@ describe("MCP Utils", () => {
       expect(mockManager.removeClient).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "Checking MCP clients diff",
+      );
+    });
+  });
+
+  describe("syncFileBasedServersToDatabase", () => {
+    let mockLogger: any;
+    let mockMcpRepository: any;
+
+    beforeEach(async () => {
+      // Get the mocked repository
+      const { mcpRepository } = await import("lib/db/repository");
+      mockMcpRepository = mcpRepository;
+
+      // Reset mocks before each test
+      vi.clearAllMocks();
+
+      // Mock the logger
+      mockLogger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        error: vi.fn(),
+      };
+    });
+
+    it("should sync new file-based servers to database", async () => {
+      const fileBasedServers = [
+        {
+          id: "file-server-1",
+          name: "File Server 1",
+          config: { url: "http://file1.com" },
+          enabled: true,
+          isFileBased: true,
+        },
+        {
+          id: "file-server-2",
+          name: "File Server 2",
+          config: { url: "http://file2.com" },
+          enabled: true,
+          isFileBased: true,
+        },
+      ];
+
+      mockMcpRepository.selectAll.mockResolvedValue([]);
+      mockMcpRepository.save.mockResolvedValue({});
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      expect(mockMcpRepository.save).toHaveBeenCalledTimes(2);
+      expect(mockMcpRepository.save).toHaveBeenCalledWith({
+        id: "file-server-1",
+        name: "File Server 1",
+        config: { url: "http://file1.com" },
+      });
+      expect(mockMcpRepository.save).toHaveBeenCalledWith({
+        id: "file-server-2",
+        name: "File Server 2",
+        config: { url: "http://file2.com" },
+      });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Synced file-based server 'File Server 1' to database",
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Synced file-based server 'File Server 2' to database",
+      );
+    });
+
+    it("should update existing file-based servers in database", async () => {
+      const fileBasedServers = [
+        {
+          id: "file-server-1",
+          name: "Updated File Server",
+          config: { url: "http://updated.com" },
+          enabled: true,
+          isFileBased: true,
+        },
+      ];
+
+      const existingDbServers = [
+        {
+          id: "file-server-1",
+          name: "Old File Server",
+          config: { url: "http://old.com" },
+          enabled: true,
+        },
+      ];
+
+      mockMcpRepository.selectAll.mockResolvedValue(existingDbServers);
+      mockMcpRepository.save.mockResolvedValue({});
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      expect(mockMcpRepository.save).toHaveBeenCalledWith({
+        id: "file-server-1",
+        name: "Updated File Server",
+        config: { url: "http://updated.com" },
+      });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Synced file-based server 'Updated File Server' to database",
+      );
+    });
+
+    it("should remove stale file-based servers from database", async () => {
+      const fileBasedServers = [
+        {
+          id: "file-server-1",
+          name: "Active Server",
+          config: { url: "http://active.com" },
+          enabled: true,
+          isFileBased: true,
+        },
+      ];
+
+      // Create a server that should be removed (deterministic UUID matches)
+      const serverToRemove = {
+        id: "stale-server-id",
+        name: "Stale Server",
+        config: { url: "http://stale.com" },
+        enabled: true,
+      };
+
+      // Generate expected deterministic UUID for the stale server
+      const expectedStaleId = generateDeterministicUUID({
+        name: "Stale Server",
+        config: { url: "http://stale.com" },
+      });
+      serverToRemove.id = expectedStaleId;
+
+      const existingDbServers = [
+        {
+          id: "file-server-1",
+          name: "Active Server",
+          config: { url: "http://active.com" },
+          enabled: true,
+        },
+        serverToRemove, // This should be removed
+        {
+          id: "user-created-server",
+          name: "User Server",
+          config: { url: "http://user.com" },
+          enabled: true,
+        }, // This should be kept (not deterministic UUID)
+      ];
+
+      mockMcpRepository.selectAll.mockResolvedValue(existingDbServers);
+      mockMcpRepository.save.mockResolvedValue({});
+      mockMcpRepository.deleteById.mockResolvedValue(undefined);
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      // Should save the active server
+      expect(mockMcpRepository.save).toHaveBeenCalledWith({
+        id: "file-server-1",
+        name: "Active Server",
+        config: { url: "http://active.com" },
+      });
+
+      // Should remove the stale file-based server
+      expect(mockMcpRepository.deleteById).toHaveBeenCalledWith(
+        expectedStaleId,
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Removed file-based server 'Stale Server' from database (no longer in config)",
+      );
+
+      // Should keep the user-created server (debug log)
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Keeping user-created server 'User Server'",
+      );
+    });
+
+    it("should handle empty file-based servers list", async () => {
+      const fileBasedServers: any[] = [];
+
+      mockMcpRepository.selectAll.mockResolvedValue([]);
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      expect(mockMcpRepository.save).not.toHaveBeenCalled();
+      expect(mockMcpRepository.deleteById).not.toHaveBeenCalled();
+    });
+
+    it("should handle repository errors gracefully", async () => {
+      const fileBasedServers = [
+        {
+          id: "error-server",
+          name: "Error Server",
+          config: { url: "http://error.com" },
+          enabled: true,
+          isFileBased: true,
+        },
+      ];
+
+      mockMcpRepository.selectAll.mockRejectedValue(
+        new Error("DB connection failed"),
+      );
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to sync file-based servers to database:",
+        expect.any(Error),
+      );
+    });
+
+    it("should handle individual server save errors", async () => {
+      const fileBasedServers = [
+        {
+          id: "good-server",
+          name: "Good Server",
+          config: { url: "http://good.com" },
+          enabled: true,
+          isFileBased: true,
+        },
+        {
+          id: "bad-server",
+          name: "Bad Server",
+          config: { url: "http://bad.com" },
+          enabled: true,
+          isFileBased: true,
+        },
+      ];
+
+      mockMcpRepository.selectAll.mockResolvedValue([]);
+      mockMcpRepository.save
+        .mockResolvedValueOnce({}) // First save succeeds
+        .mockRejectedValueOnce(new Error("Save failed")); // Second save fails
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Synced file-based server 'Good Server' to database",
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to sync server 'Bad Server' to database:",
+        expect.any(Error),
+      );
+    });
+
+    it("should handle delete errors gracefully", async () => {
+      const fileBasedServers: any[] = [];
+
+      const staleServer = {
+        id: generateDeterministicUUID({
+          name: "Stale Server",
+          config: { url: "http://stale.com" },
+        }),
+        name: "Stale Server",
+        config: { url: "http://stale.com" },
+        enabled: true,
+      };
+
+      mockMcpRepository.selectAll.mockResolvedValue([staleServer]);
+      mockMcpRepository.deleteById.mockRejectedValue(
+        new Error("Delete failed"),
+      );
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to remove server 'Stale Server' from database:",
+        expect.any(Error),
+      );
+    });
+
+    it("should preserve user-created servers with non-deterministic UUIDs", async () => {
+      const fileBasedServers: any[] = [];
+
+      const userCreatedServers = [
+        {
+          id: "random-uuid-1234-5678", // Non-deterministic UUID
+          name: "User Server 1",
+          config: { url: "http://user1.com" },
+          enabled: true,
+        },
+        {
+          id: "another-random-uuid", // Non-deterministic UUID
+          name: "User Server 2",
+          config: { url: "http://user2.com" },
+          enabled: true,
+        },
+      ];
+
+      mockMcpRepository.selectAll.mockResolvedValue(userCreatedServers);
+
+      await syncFileBasedServersToDatabase(fileBasedServers, mockLogger);
+
+      // Should not delete any servers (they're not deterministic UUIDs)
+      expect(mockMcpRepository.deleteById).not.toHaveBeenCalled();
+
+      // Should log that we're keeping them
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Keeping user-created server 'User Server 1'",
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Keeping user-created server 'User Server 2'",
       );
     });
   });
