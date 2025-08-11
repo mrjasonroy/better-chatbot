@@ -12,7 +12,10 @@ import defaultLogger from "logger";
 import { MCP_CONFIG_PATH } from "lib/ai/mcp/config-path";
 import { colorize } from "consola/utils";
 import { McpServerSchema } from "lib/db/pg/schema.pg";
-import { checkAndRefreshMCPClients } from "./utils";
+import {
+  checkAndRefreshMCPClients,
+  syncFileBasedServersToDatabase,
+} from "./utils";
 
 const logger = defaultLogger.withDefaults({
   message: colorize("gray", `MCP File Config Storage: `),
@@ -107,7 +110,12 @@ export function createFileBasedMCPConfigsStorage(
   return {
     init,
     async loadAll() {
-      return await readConfigFile();
+      const servers = await readConfigFile();
+
+      // Sync file-based servers to database for OAuth support
+      await syncFileBasedServersToDatabase(servers, logger);
+
+      return servers;
     },
     // Saves a configuration with the given name
     async save(server) {

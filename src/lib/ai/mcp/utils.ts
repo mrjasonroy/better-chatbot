@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import type { McpServerSelect } from "app-types/mcp";
 import type { MCPClientsManager } from "./create-mcp-clients-manager";
+import { mcpRepository } from "lib/db/repository";
 import equal from "lib/equal";
 import defaultLogger from "logger";
 
@@ -127,5 +128,72 @@ export async function checkAndRefreshMCPClients(
     }
   } catch (err) {
     logger.error("Error checking and refreshing clients:", err);
+  }
+}
+
+/**
+ * Sync file-based servers to database for OAuth foreign key constraint support
+ * Adds/updates file-based servers and removes ones no longer in file config
+ */
+export async function syncFileBasedServersToDatabase(
+  fileBasedServers: McpServerSelect[],
+  logger: ReturnType<typeof defaultLogger.withDefaults>,
+): Promise<void> {
+  try {
+    // Get all current database servers
+    const dbServers = await mcpRepository.selectAll();
+    const fileBasedServerIds = new Set(
+      fileBasedServers.map((server) => server.id),
+    );
+
+    // Add/update file-based servers in database
+    for (const server of fileBasedServers) {
+      try {
+        await mcpRepository.save({
+          id: server.id,
+          name: server.name,
+          config: server.config,
+        });
+        logger.debug(`Synced file-based server '${server.name}' to database`);
+      } catch (error) {
+        logger.error(
+          `Failed to sync server '${server.name}' to database:`,
+          error,
+        );
+      }
+    }
+
+    // Remove database servers that are no longer in file config
+    // Only remove servers with deterministic UUIDs (file-based servers)
+    for (const dbServer of dbServers) {
+      if (!fileBasedServerIds.has(dbServer.id)) {
+        // Check if this looks like a deterministic UUID (file-based)
+        // We can identify these by regenerating the UUID from name+config
+        const expectedId = generateDeterministicUUID({
+          name: dbServer.name,
+          config: dbServer.config,
+        });
+
+        if (dbServer.id === expectedId) {
+          // This is a file-based server that's no longer in config
+          try {
+            await mcpRepository.deleteById(dbServer.id);
+            logger.info(
+              `Removed file-based server '${dbServer.name}' from database (no longer in config)`,
+            );
+          } catch (error) {
+            logger.error(
+              `Failed to remove server '${dbServer.name}' from database:`,
+              error,
+            );
+          }
+        } else {
+          // This is a user-created server, keep it
+          logger.debug(`Keeping user-created server '${dbServer.name}'`);
+        }
+      }
+    }
+  } catch (error) {
+    logger.error("Failed to sync file-based servers to database:", error);
   }
 }
