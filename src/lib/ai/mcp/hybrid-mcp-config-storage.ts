@@ -16,6 +16,7 @@ import {
   substituteEnvVarsInObject,
   checkAndRefreshMCPClients,
   syncFileBasedServersToDatabase,
+  markFileBasedServers,
 } from "./utils";
 
 const logger = defaultLogger.withDefaults({
@@ -60,7 +61,7 @@ export function createHybridMCPConfigStorage(
   async function loadUserServers(): Promise<McpServerSelect[]> {
     try {
       const servers = await mcpRepository.selectAll();
-      return servers;
+      return markFileBasedServers(servers);
     } catch (error) {
       logger.error("Failed to load user MCP configs from database:", error);
       return [];
@@ -76,7 +77,8 @@ export function createHybridMCPConfigStorage(
     // Sync file-based servers to database for OAuth support
     await syncFileBasedServersToDatabase(defaultServers, logger);
 
-    return [...defaultServers, ...userServers];
+    // Only return database records - the synced file-based servers will have isFileBased: true
+    return userServers;
   }
 
   async function checkAndRefreshClients() {

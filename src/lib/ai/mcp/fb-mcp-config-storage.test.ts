@@ -38,6 +38,17 @@ vi.mock("lib/ai/mcp/config-path", () => ({
 
 vi.mock("./utils", () => ({
   syncFileBasedServersToDatabase: vi.fn(),
+  markFileBasedServers: vi
+    .fn()
+    .mockImplementation((servers) =>
+      servers.map((s) => ({ ...s, isFileBased: true })),
+    ),
+}));
+
+vi.mock("lib/db/repository", () => ({
+  mcpRepository: {
+    selectAll: vi.fn().mockResolvedValue([]),
+  },
 }));
 
 const mockReadFile = vi.mocked(readFile);
