@@ -135,6 +135,26 @@ export async function checkAndRefreshMCPClients(
  * Sync file-based servers to database for OAuth foreign key constraint support
  * Adds/updates file-based servers and removes ones no longer in file config
  */
+/**
+ * Marks database servers as file-based if they have deterministic UUIDs
+ */
+export function markFileBasedServers(
+  dbServers: McpServerSelect[],
+): McpServerSelect[] {
+  return dbServers.map((server) => {
+    // Check if this server has a deterministic UUID (file-based)
+    const expectedId = generateDeterministicUUID({
+      name: server.name,
+      config: server.config,
+    });
+
+    return {
+      ...server,
+      isFileBased: server.id === expectedId,
+    };
+  });
+}
+
 export async function syncFileBasedServersToDatabase(
   fileBasedServers: McpServerSelect[],
   logger: ReturnType<typeof defaultLogger.withDefaults>,

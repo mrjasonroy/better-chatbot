@@ -115,7 +115,11 @@ export function createFileBasedMCPConfigsStorage(
       // Sync file-based servers to database for OAuth support
       await syncFileBasedServersToDatabase(servers, logger);
 
-      return servers;
+      // Return the synced database records instead of file-based ones
+      const { mcpRepository } = await import("lib/db/repository");
+      const { markFileBasedServers } = await import("./utils");
+      const dbServers = await mcpRepository.selectAll();
+      return markFileBasedServers(dbServers);
     },
     // Saves a configuration with the given name
     async save(server) {
