@@ -130,62 +130,11 @@ function createProviderInstance(
         ...userHeaders,
       });
 
-    case "anthropic": {
-      function loggingFetch(
-        input: RequestInfo | URL,
-        init?: RequestInit,
-      ): Promise<Response>;
-      function loggingFetch(
-        input: string | Request | URL,
-        init?: RequestInit,
-      ): Promise<Response>;
-      async function loggingFetch(
-        input: any,
-        init?: RequestInit,
-      ): Promise<Response> {
-        const url =
-          typeof input === "string"
-            ? input
-            : input && "url" in input
-              ? (input as Request).url
-              : String(input);
-        const method = init?.method ?? "POST";
-        const headers = new Headers(init?.headers ?? {});
-        // redact secrets
-        if (headers.has("authorization"))
-          headers.set("authorization", "REDACTED");
-        if (headers.has("x-api-key")) headers.set("x-api-key", "REDACTED");
-        const bodyPreview =
-          typeof init?.body === "string"
-            ? init.body.slice(0, 2000)
-            : "[non-string body]";
-        console.log("[Anthropic] Request:", {
-          url,
-          method,
-          headers: Object.fromEntries(headers),
-          bodyPreview,
-        });
-
-        const res = await fetch(input as any, init);
-        const clone = res.clone();
-        let text = "";
-        try {
-          text = await clone.text();
-        } catch {}
-        console.log("[Anthropic] Response:", {
-          status: res.status,
-          headers: Object.fromEntries(res.headers),
-          bodyPreview: text.slice(0, 2000),
-        });
-        return res;
-      }
-
+    case "anthropic":
       return createAnthropic({
         ...config.providerSettings,
-        fetch: loggingFetch,
         ...userHeaders,
       });
-    }
 
     case "xai":
       return createXai({
