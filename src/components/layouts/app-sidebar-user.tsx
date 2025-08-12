@@ -144,14 +144,14 @@ export function AppSidebarUser({
               <GithubIcon className="size-4 fill-foreground" />
               <span>{t("reportAnIssue")}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={() => {
                 window.open("https://discord.gg/gCRu69Upnp", "_blank");
               }}
             >
               <DiscordIcon className="size-4 fill-foreground" />
               <span>{t("joinCommunity")}</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="cursor-pointer">
               <LogOutIcon className="size-4 text-foreground" />
