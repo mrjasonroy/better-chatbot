@@ -43,14 +43,16 @@ API_END_USER_ID_FIELD=email
 ## Supported Providers
 
 The feature works with all configured providers:
-- OpenAI (passes as `user` parameter)
-- Anthropic (passes as header)
-- Google Gemini (passes as header)
-- xAI Grok (passes as header)
-- OpenRouter (passes as `user` parameter)
-- Ollama (passes as header)
-- Azure OpenAI (passes as `user` parameter)
-- OpenAI-compatible APIs (passes as `user` parameter)
+- **OpenAI**: passes as `user` parameter + header
+- **Anthropic**: passes via `providerOptions` metadata only + header
+- **Google Gemini**: passes via `providerOptions` metadata only + header  
+- **xAI Grok**: passes as `user` parameter + header
+- **OpenRouter**: passes as `user` parameter + header
+- **Ollama**: passes as `user` parameter + header
+- **Azure OpenAI**: passes as `user` parameter + header
+- **OpenAI-compatible APIs**: passes as `user` parameter + header
+
+Note: Anthropic and Google use a special `providerOptions` object with metadata format for user tracking, which is passed to the AI SDK separately from model settings.
 
 ## Benefits
 
@@ -95,15 +97,19 @@ npm test src/lib/ai/core/models.user-identification.test.ts
 
 ## Migration Notes
 
-The `getModel` function in `modelRegistry` is now async. Any code calling this function needs to be updated:
+The `getModel` function in `modelRegistry` is now async and returns additional properties. Any code calling this function needs to be updated:
 
 ```typescript
 // Before
 const model = modelRegistry.getModel(chatModel);
 
 // After
-const model = await modelRegistry.getModel(chatModel);
+const { model, settings, supportsTools, providerOptions } = await modelRegistry.getModel(chatModel);
 ```
+
+### New Return Properties
+
+- **`providerOptions`**: Contains provider-specific options for user identification, particularly for Anthropic which uses a special metadata format for user tracking.
 
 ## Future Enhancements
 

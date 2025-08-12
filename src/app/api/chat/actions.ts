@@ -116,7 +116,7 @@ export async function generateExampleToolSchemaAction(options: {
   if (!modelResult) {
     throw new Error("Model not found");
   }
-  const model = modelResult.model;
+  const { model, providerOptions } = modelResult;
 
   const schema = jsonSchema(
     toAny({
@@ -132,6 +132,7 @@ export async function generateExampleToolSchemaAction(options: {
       toolInfo: options.toolInfo,
       prompt: options.prompt,
     }),
+    providerOptions,
   });
 
   return object;
@@ -204,11 +205,14 @@ export async function generateObjectAction({
   if (!modelResult) {
     throw new Error("Model not found");
   }
+  const { model: modelInstance, providerOptions } = modelResult;
+
   const result = await generateObject({
-    model: modelResult.model,
+    model: modelInstance,
     system: prompt.system,
     prompt: prompt.user,
     schema: jsonSchemaToZod(schema),
+    providerOptions,
   });
   return result.object;
 }

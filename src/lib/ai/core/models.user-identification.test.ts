@@ -390,7 +390,7 @@ describe("User Identification in Models", () => {
       vi.resetModules();
       const { modelRegistry } = await import("./models");
 
-      await modelRegistry.getModel({
+      const result = await modelRegistry.getModel({
         provider: "anthropic",
         model: "Claude",
       });
@@ -399,13 +399,24 @@ describe("User Identification in Models", () => {
         "x-user-id",
         "test@example.com",
       );
+      // Anthropic no longer passes user in model settings, only via providerOptions
+      expect(anthropicMock.mockProvider).toHaveBeenCalledWith(
+        "claude-3",
+        expect.not.objectContaining({
+          metadata: expect.anything(),
+        }),
+      );
+      // Check providerOptions instead
+      expect(result.providerOptions.anthropic).toEqual({
+        metadata: { user_id: "test@example.com" },
+      });
     });
 
     it("should pass user identification to Google provider", async () => {
       vi.resetModules();
       const { modelRegistry } = await import("./models");
 
-      await modelRegistry.getModel({
+      const result = await modelRegistry.getModel({
         provider: "google",
         model: "Gemini",
       });
@@ -414,13 +425,24 @@ describe("User Identification in Models", () => {
         "x-user-id",
         "test@example.com",
       );
+      // Google no longer passes user in model settings, only via providerOptions
+      expect(googleMock.mockProvider).toHaveBeenCalledWith(
+        "gemini-pro",
+        expect.not.objectContaining({
+          metadata: expect.anything(),
+        }),
+      );
+      // Check providerOptions instead
+      expect(result.providerOptions.google).toEqual({
+        metadata: { user_id: "test@example.com" },
+      });
     });
 
     it("should pass user identification to xAI provider", async () => {
       vi.resetModules();
       const { modelRegistry } = await import("./models");
 
-      await modelRegistry.getModel({
+      const result = await modelRegistry.getModel({
         provider: "xai",
         model: "Grok",
       });
@@ -429,6 +451,13 @@ describe("User Identification in Models", () => {
         "x-user-id",
         "test@example.com",
       );
+      // xAI still uses user parameter, not metadata
+      expect(xaiMock.mockProvider).toHaveBeenCalledWith(
+        "grok-beta",
+        expect.objectContaining({ user: "test@example.com" }),
+      );
+      // xAI not included in providerOptions (only anthropic and google)
+      expect(result.providerOptions).not.toHaveProperty("xai");
     });
 
     it("should pass user identification to OpenRouter provider", async () => {
@@ -462,6 +491,10 @@ describe("User Identification in Models", () => {
       expect(ollamaMock.mockCreator.lastConfig).toHaveProperty(
         "x-user-id",
         "test@example.com",
+      );
+      expect(ollamaMock.mockProvider).toHaveBeenCalledWith(
+        "llama3",
+        expect.objectContaining({ user: "test@example.com" }),
       );
     });
 
@@ -615,6 +648,90 @@ describe("User Identification in Models", () => {
         "x-user-id",
         "fallback@example.com",
       );
+    });
+  });
+
+  describe("Provider Options Integration", () => {
+    it("should return providerOptions with Anthropic and Google metadata when user identification is enabled", async () => {
+      const { parseEnvBoolean } = await import("lib/utils");
+      const { getSession } = await import("auth/server");
+
+      (parseEnvBoolean as any).mockReturnValue(true);
+      (getSession as any).mockResolvedValue({
+        user: { email: "test@example.com" },
+      });
+
+      process.env.PASS_USER_TO_API_CALLS = "true";
+
+      vi.resetModules();
+      const { modelRegistry } = await import("./models");
+
+      const result = await modelRegistry.getModel({
+        provider: "anthropic",
+        model: "Claude",
+      });
+
+      expect(result.providerOptions).toEqual({
+        anthropic: {
+          metadata: {
+            user_id: "test@example.com",
+          },
+        },
+        google: {
+          metadata: {
+            user_id: "test@example.com",
+          },
+        },
+      });
+    });
+
+    it("should return empty providerOptions when user identification is disabled", async () => {
+      const { parseEnvBoolean } = await import("lib/utils");
+
+      (parseEnvBoolean as any).mockReturnValue(false);
+
+      process.env.PASS_USER_TO_API_CALLS = "false";
+
+      vi.resetModules();
+      const { modelRegistry } = await import("./models");
+
+      const result = await modelRegistry.getModel({
+        provider: "openai",
+        model: "GPT-4",
+      });
+
+      expect(result.providerOptions).toEqual({});
+    });
+
+    it("should return providerOptions in fallback scenarios", async () => {
+      const { parseEnvBoolean } = await import("lib/utils");
+      const { getSession } = await import("auth/server");
+
+      (parseEnvBoolean as any).mockReturnValue(true);
+      (getSession as any).mockResolvedValue({
+        user: { email: "fallback@example.com" },
+      });
+
+      process.env.PASS_USER_TO_API_CALLS = "true";
+
+      vi.resetModules();
+      const { modelRegistry } = await import("./models");
+
+      // Request with no specific model to trigger fallback
+      const result = await modelRegistry.getModel();
+
+      expect(result.providerOptions).toEqual({
+        anthropic: {
+          metadata: {
+            user_id: "fallback@example.com",
+          },
+        },
+        google: {
+          metadata: {
+            user_id: "fallback@example.com",
+          },
+        },
+      });
     });
   });
 

@@ -87,7 +87,10 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   state,
 }) => {
   const modelConfig = await modelRegistry.getModel(node.model);
-  const model = modelConfig.model;
+  if (!modelConfig) {
+    throw new Error("Model not found");
+  }
+  const { model, providerOptions } = modelConfig;
 
   // Convert TipTap JSON messages to AI SDK format, resolving mentions to actual data
   const messages: Omit<Message, "id">[] = node.messages.map((message) =>
@@ -112,6 +115,7 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
       model,
       messages,
       maxSteps: 1,
+      providerOptions,
     });
     return {
       output: {
@@ -126,6 +130,7 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
     messages,
     schema: jsonSchemaToZod(node.outputSchema.properties.answer),
     maxRetries: 3,
+    providerOptions,
   });
 
   return {
@@ -211,11 +216,16 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
       : undefined;
 
     const modelConfig = await modelRegistry.getModel(node.model);
+    if (!modelConfig) {
+      throw new Error("Model not found");
+    }
+    const { model, providerOptions } = modelConfig;
     const response = await generateText({
-      model: modelConfig.model,
+      model,
       maxSteps: 1,
       toolChoice: "required", // Force the model to call the tool
       prompt,
+      providerOptions,
       tools: {
         [node.tool.id]: {
           description: node.tool.description,

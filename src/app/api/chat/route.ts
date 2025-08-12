@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     if (!modelResult) {
       return new Response("Model not found", { status: 404 });
     }
-    const model = modelResult.model;
+    const { model, providerOptions } = modelResult;
 
     let thread = await chatRepository.selectThreadDetails(id);
 
@@ -245,6 +245,7 @@ export async function POST(request: Request) {
           tools: vercelAITooles,
           toolChoice: "auto",
           abortSignal: request.signal,
+          providerOptions,
           onFinish: async ({ response, usage }) => {
             const appendMessages = appendResponseMessages({
               messages: messages.slice(-1),

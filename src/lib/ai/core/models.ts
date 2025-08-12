@@ -4,6 +4,7 @@ import { createOllama, OllamaProvider } from "ollama-ai-provider";
 import { createOpenAI, OpenAIProvider } from "@ai-sdk/openai";
 import {
   createGoogleGenerativeAI,
+  google,
   GoogleGenerativeAIProvider,
 } from "@ai-sdk/google";
 import { AnthropicProvider, createAnthropic } from "@ai-sdk/anthropic";
@@ -244,7 +245,6 @@ function createModelInstance(
       const modelSettings = modelDef.settings as GoogleModel["settings"];
       return googleProvider(modelDef.apiName, {
         ...modelSettings,
-        ...(userIdentifier ? { metadata: { user_id: userIdentifier } } : {}),
       });
     }
 
@@ -253,7 +253,6 @@ function createModelInstance(
       const modelSettings = modelDef.settings as AnthropicModel["settings"];
       return anthropicProvider(modelDef.apiName, {
         ...modelSettings,
-        ...(userIdentifier ? { metadata: { user_id: userIdentifier } } : {}),
       });
     }
 
@@ -298,6 +297,7 @@ async function getModel(chatModel?: ChatModel): Promise<{
   model: LanguageModel;
   settings: ModelSettings;
   supportsTools: boolean;
+  providerOptions: Record<string, any>;
 } | null> {
   const passUserToApiCalls = parseEnvBoolean(
     process.env.PASS_USER_TO_API_CALLS,
@@ -306,10 +306,24 @@ async function getModel(chatModel?: ChatModel): Promise<{
 
   let userIdentifier: string | undefined;
 
+  let providerOptions: Record<string, any> = {};
+
   if (passUserToApiCalls) {
     const session = await getSession();
     const user = session?.user;
     userIdentifier = user?.[userHeaderValueField];
+    providerOptions = {
+      anthropic: {
+        metadata: {
+          user_id: userIdentifier,
+        },
+      },
+      google: {
+        metadata: {
+          user_id: userIdentifier,
+        },
+      },
+    };
   }
 
   // Fallback to first available model if none specified
@@ -320,7 +334,10 @@ async function getModel(chatModel?: ChatModel): Promise<{
         "No AI models are configured. Please set at least one provider API key and ensure models are defined in models.json.",
       );
     }
-    return fallback;
+    return {
+      ...fallback,
+      providerOptions,
+    };
   }
 
   const providerId = chatModel.provider;
@@ -328,7 +345,14 @@ async function getModel(chatModel?: ChatModel): Promise<{
   const modelConfig = findModelConfig(providerId, chatModel.model);
   if (!modelConfig) {
     logger.warn(`Model not found: ${providerId}/${chatModel.model}`);
-    return getFallbackModel(userIdentifier);
+    const fallback = getFallbackModel(userIdentifier);
+    if (!fallback) {
+      throw new Error("No models available");
+    }
+    return {
+      ...fallback,
+      providerOptions,
+    };
   }
 
   const { providerConfig, modelDef } = modelConfig;
@@ -336,7 +360,14 @@ async function getModel(chatModel?: ChatModel): Promise<{
   const provider = getProvider(providerConfig, userIdentifier);
   if (!provider) {
     logger.warn(`Failed to create provider: ${providerId}`);
-    return getFallbackModel(userIdentifier);
+    const fallback = getFallbackModel(userIdentifier);
+    if (!fallback) {
+      throw new Error("No models available");
+    }
+    return {
+      ...fallback,
+      providerOptions,
+    };
   }
 
   try {
@@ -352,13 +383,21 @@ async function getModel(chatModel?: ChatModel): Promise<{
       model,
       settings: modelSettings,
       supportsTools: modelDef.supportsTools ?? true,
+      providerOptions,
     };
   } catch (error) {
     logger.error(
       `Failed to create model ${providerId}/${chatModel.model}:`,
       error,
     );
-    return getFallbackModel(userIdentifier);
+    const fallback = getFallbackModel(userIdentifier);
+    if (!fallback) {
+      throw new Error("No models available");
+    }
+    return {
+      ...fallback,
+      providerOptions,
+    };
   }
 }
 

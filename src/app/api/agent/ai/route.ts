@@ -84,12 +84,13 @@ export async function POST(request: Request) {
     if (!modelResult) {
       return new Response("Model not found", { status: 404 });
     }
-    const model = modelResult.model;
+    const { model, providerOptions } = modelResult;
     const result = streamObject({
       model,
       system,
       prompt: message,
       schema: dynamicAgentSchema,
+      providerOptions,
     });
 
     return result.toTextStreamResponse();

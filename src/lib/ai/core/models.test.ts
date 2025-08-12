@@ -169,6 +169,7 @@ describe("Model Registry", () => {
       expect(result.model.modelId).toBe("openai:gpt-4");
       expect(result.settings).toEqual({ temperature: 0.7 });
       expect(result.supportsTools).toBe(true);
+      expect(result.providerOptions).toEqual({});
     });
 
     it("should get model without specified chat model (fallback)", async () => {
@@ -177,6 +178,7 @@ describe("Model Registry", () => {
       expect(result).toBeDefined();
       expect(result.model.modelId).toBe("openai:gpt-4");
       expect(result.supportsTools).toBe(true);
+      expect(result.providerOptions).toEqual({});
     });
 
     it("should handle model settings correctly", async () => {
@@ -187,6 +189,7 @@ describe("Model Registry", () => {
 
       const result = await modelRegistry.getModel(chatModel);
       expect(result.settings).toEqual({});
+      expect(result.providerOptions).toEqual({});
     });
 
     it("should default supportsTools to true when not specified", async () => {
@@ -205,6 +208,7 @@ describe("Model Registry", () => {
       });
 
       expect(result.supportsTools).toBe(true);
+      expect(result.providerOptions).toEqual({});
     });
 
     it("should throw error when no models are available", async () => {
@@ -226,6 +230,7 @@ describe("Model Registry", () => {
       // Should fall back to first available model
       const result = await modelRegistry.getModel(chatModel);
       expect(result.model.modelId).toBe("openai:gpt-4");
+      expect(result.providerOptions).toEqual({});
     });
 
     it("should fall back when provider not found", async () => {
@@ -237,6 +242,7 @@ describe("Model Registry", () => {
       // Should fall back to first available model
       const result = await modelRegistry.getModel(chatModel);
       expect(result.model.modelId).toBe("openai:gpt-4");
+      expect(result.providerOptions).toEqual({});
     });
   });
 });

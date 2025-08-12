@@ -40,13 +40,14 @@ export async function POST(request: Request) {
     if (!modelResult) {
       return new Response("Model not found", { status: 404 });
     }
-    const model = modelResult.model;
+    const { model, providerOptions } = modelResult;
 
     return createDataStreamResponse({
       execute(dataStream) {
         const result = streamText({
           model,
           system: CREATE_THREAD_TITLE_PROMPT,
+          providerOptions,
           experimental_transform: smoothStream({ chunking: "word" }),
           prompt: message,
           abortSignal: request.signal,

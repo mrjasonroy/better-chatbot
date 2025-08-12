@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     if (!modelResult) {
       return new Response("Model not found", { status: 404 });
     }
-    const model = modelResult.model;
+    const { model, providerOptions } = modelResult;
     const userPreferences =
       (await userRepository.getPreferences(session.user.id)) || undefined;
 
@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       maxSteps: 10,
       experimental_continueSteps: true,
       experimental_transform: smoothStream({ chunking: "word" }),
+      providerOptions,
     }).toDataStreamResponse();
   } catch (error: any) {
     logger.error(error);
