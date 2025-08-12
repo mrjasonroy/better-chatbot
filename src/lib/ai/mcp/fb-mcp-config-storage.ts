@@ -15,6 +15,7 @@ import { McpServerSchema } from "lib/db/pg/schema.pg";
 import {
   checkAndRefreshMCPClients,
   syncFileBasedServersToDatabase,
+  generateDeterministicUUID,
 } from "./utils";
 
 const logger = defaultLogger.withDefaults({
@@ -163,13 +164,15 @@ function fillMcpServerSchema(
 function toMcpServerArray(
   config: Record<string, MCPServerConfig>,
 ): (typeof McpServerSchema.$inferSelect & { isFileBased: boolean })[] {
-  return Object.entries(config).map(([name, config]) =>
-    fillMcpServerSchema({
-      id: name,
+  return Object.entries(config).map(([name, config]) => {
+    // Generate deterministic UUID for file-based servers
+    const id = generateDeterministicUUID({ name, config });
+    return fillMcpServerSchema({
+      id,
       name,
       config,
-    }),
-  );
+    });
+  });
 }
 
 function toMcpServerRecord(
