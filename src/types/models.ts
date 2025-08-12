@@ -338,10 +338,26 @@ export const OpenRouterProviderSchema = BaseProviderSchema.extend({
   return setDefaults(data);
 });
 
-// Ollama Provider & Model Settings
+export const OllamaModelSettingsSchema = BaseModelSettingsSchema.extend({
+  experimentalStreamTools: z.boolean().optional(),
+  f16Kv: z.boolean().optional(),
+  lowVram: z.boolean().optional(),
+  mainGpu: z.number().optional(),
+  minP: z.number().optional(),
+  mirostat: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
+  mirostatEta: z.number().optional(),
+  mirostatTau: z.number().optional(),
+  numa: z.boolean().optional(),
+  numBatch: z.number().optional(),
+  numCtx: z.number().optional(),
+  numGpu: z.number().optional(),
+  numKeep: z.number().optional(),
+  numPredict: z.number().optional(),
+  vocabOnly: z.boolean().optional(),
+});
 
 export const OllamaModelSchema = BaseModelSchema.extend({
-  settings: BaseModelSettingsSchema.optional().default({}),
+  settings: OllamaModelSettingsSchema.optional().default({}),
 });
 
 export const OllamaProviderSchema = BaseProviderSchema.extend({

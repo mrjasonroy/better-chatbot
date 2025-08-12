@@ -223,7 +223,11 @@ function createModelInstance(
 
     case "ollama": {
       const ollamaProvider = provider as OllamaProvider;
-      return ollamaProvider(modelDef.apiName);
+      const modelSettings = modelDef.settings as OllamaModel["settings"];
+      return ollamaProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { user: userIdentifier } : {}),
+      });
     }
 
     case "openai": {
@@ -237,17 +241,29 @@ function createModelInstance(
 
     case "google": {
       const googleProvider = provider as GoogleGenerativeAIProvider;
-      return googleProvider(modelDef.apiName);
+      const modelSettings = modelDef.settings as GoogleModel["settings"];
+      return googleProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { metadata: { user_id: userIdentifier } } : {}),
+      });
     }
 
     case "anthropic": {
       const anthropicProvider = provider as AnthropicProvider;
-      return anthropicProvider(modelDef.apiName);
+      const modelSettings = modelDef.settings as AnthropicModel["settings"];
+      return anthropicProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { metadata: { user_id: userIdentifier } } : {}),
+      });
     }
 
     case "xai": {
       const xaiProvider = provider as XaiProvider;
-      return xaiProvider(modelDef.apiName);
+      const modelSettings = modelDef.settings as XAIModel["settings"];
+      return xaiProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { user: userIdentifier } : {}),
+      });
     }
 
     case "openrouter": {
