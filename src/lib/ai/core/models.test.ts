@@ -2,6 +2,16 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { modelRegistry } from "./models";
 import type { ChatModel } from "@/types/chat";
 
+// Mock auth/server module
+vi.mock("auth/server", () => ({
+  getSession: vi.fn(),
+}));
+
+// Mock utils module
+vi.mock("lib/utils", () => ({
+  parseEnvBoolean: vi.fn(() => false), // Default to false to not require user authentication
+}));
+
 // Mock the config module with simple, predictable behavior
 vi.mock("./config", () => ({
   getAllProviderConfigs: vi.fn(),
@@ -147,13 +157,13 @@ describe("Model Registry", () => {
   });
 
   describe("getModel", () => {
-    it("should get model with specified chat model", () => {
+    it("should get model with specified chat model", async () => {
       const chatModel: ChatModel = {
         provider: "openai",
         model: "GPT-4",
       };
 
-      const result = modelRegistry.getModel(chatModel);
+      const result = await modelRegistry.getModel(chatModel);
 
       expect(result).toBeDefined();
       expect(result.model.modelId).toBe("openai:gpt-4");
@@ -161,21 +171,21 @@ describe("Model Registry", () => {
       expect(result.supportsTools).toBe(true);
     });
 
-    it("should get model without specified chat model (fallback)", () => {
-      const result = modelRegistry.getModel();
+    it("should get model without specified chat model (fallback)", async () => {
+      const result = await modelRegistry.getModel();
 
       expect(result).toBeDefined();
       expect(result.model.modelId).toBe("openai:gpt-4");
       expect(result.supportsTools).toBe(true);
     });
 
-    it("should handle model settings correctly", () => {
+    it("should handle model settings correctly", async () => {
       const chatModel: ChatModel = {
         provider: "openai",
         model: "GPT-3.5", // This one has empty settings
       };
 
-      const result = modelRegistry.getModel(chatModel);
+      const result = await modelRegistry.getModel(chatModel);
       expect(result.settings).toEqual({});
     });
 
@@ -189,7 +199,7 @@ describe("Model Registry", () => {
         models: [{ uiName: "GPT-4", apiName: "gpt-4" }], // No supportsTools field
       });
 
-      const result = modelRegistry.getModel({
+      const result = await modelRegistry.getModel({
         provider: "openai",
         model: "GPT-4",
       });
@@ -202,30 +212,30 @@ describe("Model Registry", () => {
       (configModule.getAllProviderConfigs as any).mockReturnValue([]);
       (configModule.isProviderConfigured as any).mockReturnValue(false);
 
-      expect(() => {
-        modelRegistry.getModel();
-      }).toThrow("No AI models are configured");
+      await expect(modelRegistry.getModel()).rejects.toThrow(
+        "No AI models are configured",
+      );
     });
 
-    it("should fall back when model not found", () => {
+    it("should fall back when model not found", async () => {
       const chatModel: ChatModel = {
         provider: "openai",
         model: "NonExistentModel",
       };
 
       // Should fall back to first available model
-      const result = modelRegistry.getModel(chatModel);
+      const result = await modelRegistry.getModel(chatModel);
       expect(result.model.modelId).toBe("openai:gpt-4");
     });
 
-    it("should fall back when provider not found", () => {
+    it("should fall back when provider not found", async () => {
       const chatModel: ChatModel = {
         provider: "nonexistent",
         model: "some-model",
       };
 
       // Should fall back to first available model
-      const result = modelRegistry.getModel(chatModel);
+      const result = await modelRegistry.getModel(chatModel);
       expect(result.model.modelId).toBe("openai:gpt-4");
     });
   });

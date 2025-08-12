@@ -86,7 +86,8 @@ export const llmNodeExecutor: NodeExecutor<LLMNodeData> = async ({
   node,
   state,
 }) => {
-  const model = modelRegistry.getModel(node.model).model;
+  const modelConfig = await modelRegistry.getModel(node.model);
+  const model = modelConfig.model;
 
   // Convert TipTap JSON messages to AI SDK format, resolving mentions to actual data
   const messages: Omit<Message, "id">[] = node.messages.map((message) =>
@@ -209,8 +210,9 @@ export const toolNodeExecutor: NodeExecutor<ToolNodeData> = async ({
         ).parts[0]?.text
       : undefined;
 
+    const modelConfig = await modelRegistry.getModel(node.model);
     const response = await generateText({
-      model: modelRegistry.getModel(node.model).model,
+      model: modelConfig.model,
       maxSteps: 1,
       toolChoice: "required", // Force the model to call the tool
       prompt,

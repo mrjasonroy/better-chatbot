@@ -38,6 +38,9 @@ import type {
 import defaultLogger from "logger";
 import { colorize } from "consola/utils";
 
+import { getSession } from "auth/server";
+import { parseEnvBoolean } from "lib/utils";
+
 const logger = defaultLogger.withDefaults({
   message: colorize("green", "Models: "),
 });
@@ -92,33 +95,71 @@ type ProviderTypeMap = {
 // Function overloads for type-safe provider creation
 function createProviderInstance<T extends ProviderConfig["type"]>(
   config: ProviderConfig & { type: T },
+  userIdentifier?: string,
 ): ProviderTypeMap[T];
-function createProviderInstance(config: ProviderConfig): AnyProvider | null;
-function createProviderInstance(config: ProviderConfig): AnyProvider | null {
+function createProviderInstance(
+  config: ProviderConfig,
+  userIdentifier?: string,
+): AnyProvider | null;
+function createProviderInstance(
+  config: ProviderConfig,
+  userIdentifier?: string,
+): AnyProvider | null {
+  const userHeaderKey = process.env.API_USER_HEADER_KEY || "x-user-id";
+
+  const userHeaders: Record<string, string> = {};
+  if (userIdentifier) {
+    userHeaders[userHeaderKey] = userIdentifier;
+  }
+
   switch (config.type) {
     case "openai":
-      return createOpenAI(config.providerSettings);
+      return createOpenAI({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     case "google":
-      return createGoogleGenerativeAI(config.providerSettings);
+      return createGoogleGenerativeAI({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     case "anthropic":
-      return createAnthropic(config.providerSettings);
+      return createAnthropic({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     case "xai":
-      return createXai(config.providerSettings);
+      return createXai({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     case "openrouter":
-      return createOpenRouter(config.providerSettings);
+      return createOpenRouter({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     case "ollama":
-      return createOllama(config.providerSettings);
+      return createOllama({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     case "azure-openai":
-      return createAzure(config.providerSettings);
+      return createAzure({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     case "openai-compatible":
-      return createOpenAICompatible(config.providerSettings);
+      return createOpenAICompatible({
+        ...config.providerSettings,
+        ...userHeaders,
+      });
 
     default: {
       const type = (config as { type?: string }).type;
@@ -128,14 +169,17 @@ function createProviderInstance(config: ProviderConfig): AnyProvider | null {
   }
 }
 
-function getProvider(config: ProviderConfig): AnyProvider | null {
+function getProvider(
+  config: ProviderConfig,
+  userIdentifier?: string,
+): AnyProvider | null {
   const cacheKey = config.id;
 
   if (providerCache.has(cacheKey)) {
     return providerCache.get(cacheKey)!;
   }
 
-  const provider = createProviderInstance(config);
+  const provider = createProviderInstance(config, userIdentifier);
   if (provider) {
     providerCache.set(cacheKey, provider);
     logger.info(`✅ Created provider: ${config.id}`);
@@ -164,11 +208,16 @@ function createModelInstance(
   provider: AnyProvider,
   providerConfig: ProviderConfig,
   modelDef: AnyModelDef,
+  userIdentifier?: string,
 ): LanguageModel {
   switch (providerConfig.type) {
     case "azure-openai": {
       const azureProvider = provider as AzureOpenAIProvider;
-      const azureModel = azureProvider(modelDef.apiName);
+      const modelSettings = modelDef.settings as AzureOpenAIModel["settings"];
+      const azureModel = azureProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { user: userIdentifier } : {}),
+      });
       return azureModel;
     }
 
@@ -179,7 +228,11 @@ function createModelInstance(
 
     case "openai": {
       const openaiProvider = provider as OpenAIProvider;
-      return openaiProvider(modelDef.apiName);
+      const modelSettings = modelDef.settings as OpenAIModel["settings"];
+      return openaiProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { user: userIdentifier } : {}),
+      });
     }
 
     case "google": {
@@ -199,12 +252,21 @@ function createModelInstance(
 
     case "openrouter": {
       const openrouterProvider = provider as OpenRouterProvider;
-      return openrouterProvider(modelDef.apiName);
+      const modelSettings = modelDef.settings as OpenRouterModel["settings"];
+      return openrouterProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { user: userIdentifier } : {}),
+      });
     }
 
     case "openai-compatible": {
       const compatibleProvider = provider as OpenAICompatibleProvider;
-      return compatibleProvider(modelDef.apiName);
+      const modelSettings =
+        modelDef.settings as OpenAICompatibleModel["settings"];
+      return compatibleProvider(modelDef.apiName, {
+        ...modelSettings,
+        ...(userIdentifier ? { user: userIdentifier } : {}),
+      });
     }
 
     default: {
@@ -216,14 +278,27 @@ function createModelInstance(
   }
 }
 
-function getModel(chatModel?: ChatModel): {
+async function getModel(chatModel?: ChatModel): Promise<{
   model: LanguageModel;
   settings: ModelSettings;
   supportsTools: boolean;
-} | null {
+} | null> {
+  const passUserToApiCalls = parseEnvBoolean(
+    process.env.PASS_USER_TO_API_CALLS,
+  );
+  const userHeaderValueField = process.env.API_END_USER_ID_FIELD || "email";
+
+  let userIdentifier: string | undefined;
+
+  if (passUserToApiCalls) {
+    const session = await getSession();
+    const user = session?.user;
+    userIdentifier = user?.[userHeaderValueField];
+  }
+
   // Fallback to first available model if none specified
   if (!chatModel) {
-    const fallback = getFallbackModel();
+    const fallback = getFallbackModel(userIdentifier);
     if (!fallback) {
       throw new Error(
         "No AI models are configured. Please set at least one provider API key and ensure models are defined in models.json.",
@@ -237,19 +312,24 @@ function getModel(chatModel?: ChatModel): {
   const modelConfig = findModelConfig(providerId, chatModel.model);
   if (!modelConfig) {
     logger.warn(`Model not found: ${providerId}/${chatModel.model}`);
-    return getFallbackModel();
+    return getFallbackModel(userIdentifier);
   }
 
   const { providerConfig, modelDef } = modelConfig;
 
-  const provider = getProvider(providerConfig);
+  const provider = getProvider(providerConfig, userIdentifier);
   if (!provider) {
     logger.warn(`Failed to create provider: ${providerId}`);
-    return getFallbackModel();
+    return getFallbackModel(userIdentifier);
   }
 
   try {
-    const model = createModelInstance(provider, providerConfig, modelDef);
+    const model = createModelInstance(
+      provider,
+      providerConfig,
+      modelDef,
+      userIdentifier,
+    );
     const modelSettings = modelDef.settings || {};
 
     return {
@@ -262,11 +342,11 @@ function getModel(chatModel?: ChatModel): {
       `Failed to create model ${providerId}/${chatModel.model}:`,
       error,
     );
-    return getFallbackModel();
+    return getFallbackModel(userIdentifier);
   }
 }
 
-function getFallbackModel(): {
+function getFallbackModel(userIdentifier?: string): {
   model: LanguageModel;
   settings: ModelSettings;
   supportsTools: boolean;
@@ -280,10 +360,15 @@ function getFallbackModel(): {
 
     for (const modelDef of providerConfig.models) {
       try {
-        const provider = getProvider(providerConfig);
+        const provider = getProvider(providerConfig, userIdentifier);
         if (!provider) continue;
 
-        const model = createModelInstance(provider, providerConfig, modelDef);
+        const model = createModelInstance(
+          provider,
+          providerConfig,
+          modelDef,
+          userIdentifier,
+        );
         const modelSettings = modelDef.settings || {};
 
         logger.info(
@@ -329,8 +414,8 @@ export const modelRegistry = {
   get modelsInfo() {
     return getModelsInfo();
   },
-  getModel: (chatModel?: ChatModel) => {
-    const result = getModel(chatModel);
+  getModel: async (chatModel?: ChatModel) => {
+    const result = await getModel(chatModel);
     if (!result) {
       throw new Error("No models available");
     }

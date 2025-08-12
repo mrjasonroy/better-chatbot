@@ -24,7 +24,11 @@ export async function POST(request: Request) {
       };
       instructions?: string;
     };
-    const model = modelRegistry.getModel(chatModel).model;
+    const modelResult = await modelRegistry.getModel(chatModel);
+    if (!modelResult) {
+      return new Response("Model not found", { status: 404 });
+    }
+    const model = modelResult.model;
     const userPreferences =
       (await userRepository.getPreferences(session.user.id)) || undefined;
 

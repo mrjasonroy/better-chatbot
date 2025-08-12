@@ -74,7 +74,10 @@ export async function POST(request: Request) {
       mentions = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
-    const modelResult = modelRegistry.getModel(chatModel);
+    const modelResult = await modelRegistry.getModel(chatModel);
+    if (!modelResult) {
+      return new Response("Model not found", { status: 404 });
+    }
     const model = modelResult.model;
 
     let thread = await chatRepository.selectThreadDetails(id);

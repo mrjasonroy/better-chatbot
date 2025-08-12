@@ -36,10 +36,16 @@ export async function POST(request: Request) {
       `chatModel: ${chatModel?.provider}/${chatModel?.model}, threadId: ${threadId}`,
     );
 
+    const modelResult = await modelRegistry.getModel(chatModel);
+    if (!modelResult) {
+      return new Response("Model not found", { status: 404 });
+    }
+    const model = modelResult.model;
+
     return createDataStreamResponse({
       execute(dataStream) {
         const result = streamText({
-          model: modelRegistry.getModel(chatModel).model,
+          model,
           system: CREATE_THREAD_TITLE_PROMPT,
           experimental_transform: smoothStream({ chunking: "word" }),
           prompt: message,

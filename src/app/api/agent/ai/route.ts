@@ -80,9 +80,13 @@ export async function POST(request: Request) {
     });
 
     const system = buildAgentGenerationPrompt(Array.from(toolNames));
-
+    const modelResult = await modelRegistry.getModel(chatModel);
+    if (!modelResult) {
+      return new Response("Model not found", { status: 404 });
+    }
+    const model = modelResult.model;
     const result = streamObject({
-      model: modelRegistry.getModel(chatModel).model,
+      model,
       system,
       prompt: message,
       schema: dynamicAgentSchema,

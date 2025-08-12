@@ -112,7 +112,11 @@ export async function generateExampleToolSchemaAction(options: {
   toolInfo: MCPToolInfo;
   prompt?: string;
 }) {
-  const model = modelRegistry.getModel(options.model).model;
+  const modelResult = await modelRegistry.getModel(options.model);
+  if (!modelResult) {
+    throw new Error("Model not found");
+  }
+  const model = modelResult.model;
 
   const schema = jsonSchema(
     toAny({
@@ -196,8 +200,12 @@ export async function generateObjectAction({
   };
   schema: JSONSchema7 | ObjectJsonSchema7;
 }) {
+  const modelResult = await modelRegistry.getModel(model);
+  if (!modelResult) {
+    throw new Error("Model not found");
+  }
   const result = await generateObject({
-    model: modelRegistry.getModel(model).model,
+    model: modelResult.model,
     system: prompt.system,
     prompt: prompt.user,
     schema: jsonSchemaToZod(schema),
