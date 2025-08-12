@@ -26,7 +26,7 @@ This feature allows Better Chatbot to pass user identification information to AI
 PASS_USER_TO_API_CALLS=true
 
 # Use custom header for OpenWebUI compatibility
-API_USER_HEADER_KEY=X-OpenWebUI-User-Id
+API_USER_HEADER_KEY=x-openwebui-user-email
 
 # Use email as the user identifier
 API_END_USER_ID_FIELD=email

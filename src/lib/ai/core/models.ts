@@ -4,7 +4,6 @@ import { createOllama, OllamaProvider } from "ollama-ai-provider";
 import { createOpenAI, OpenAIProvider } from "@ai-sdk/openai";
 import {
   createGoogleGenerativeAI,
-  google,
   GoogleGenerativeAIProvider,
 } from "@ai-sdk/google";
 import { AnthropicProvider, createAnthropic } from "@ai-sdk/anthropic";
@@ -108,15 +107,20 @@ function createProviderInstance(
 ): AnyProvider | null {
   const userHeaderKey = process.env.API_USER_HEADER_KEY || "x-user-id";
 
-  const userHeaders: Record<string, string> = {};
+  const userHeaders: {
+    headers: Record<string, string>;
+  } = {
+    headers: {},
+  };
   if (userIdentifier) {
-    userHeaders[userHeaderKey] = userIdentifier;
+    userHeaders.headers[userHeaderKey] = userIdentifier;
   }
 
   switch (config.type) {
     case "openai":
       return createOpenAI({
         ...config.providerSettings,
+
         ...userHeaders,
       });
 
@@ -126,11 +130,62 @@ function createProviderInstance(
         ...userHeaders,
       });
 
-    case "anthropic":
+    case "anthropic": {
+      function loggingFetch(
+        input: RequestInfo | URL,
+        init?: RequestInit,
+      ): Promise<Response>;
+      function loggingFetch(
+        input: string | Request | URL,
+        init?: RequestInit,
+      ): Promise<Response>;
+      async function loggingFetch(
+        input: any,
+        init?: RequestInit,
+      ): Promise<Response> {
+        const url =
+          typeof input === "string"
+            ? input
+            : input && "url" in input
+              ? (input as Request).url
+              : String(input);
+        const method = init?.method ?? "POST";
+        const headers = new Headers(init?.headers ?? {});
+        // redact secrets
+        if (headers.has("authorization"))
+          headers.set("authorization", "REDACTED");
+        if (headers.has("x-api-key")) headers.set("x-api-key", "REDACTED");
+        const bodyPreview =
+          typeof init?.body === "string"
+            ? init.body.slice(0, 2000)
+            : "[non-string body]";
+        console.log("[Anthropic] Request:", {
+          url,
+          method,
+          headers: Object.fromEntries(headers),
+          bodyPreview,
+        });
+
+        const res = await fetch(input as any, init);
+        const clone = res.clone();
+        let text = "";
+        try {
+          text = await clone.text();
+        } catch {}
+        console.log("[Anthropic] Response:", {
+          status: res.status,
+          headers: Object.fromEntries(res.headers),
+          bodyPreview: text.slice(0, 2000),
+        });
+        return res;
+      }
+
       return createAnthropic({
         ...config.providerSettings,
+        fetch: loggingFetch,
         ...userHeaders,
       });
+    }
 
     case "xai":
       return createXai({
@@ -315,15 +370,9 @@ async function getModel(chatModel?: ChatModel): Promise<{
     providerOptions = {
       anthropic: {
         user_id: userIdentifier,
-        litellm_metadata: {
-          user: userIdentifier,
-        },
       },
       google: {
         user_id: userIdentifier,
-        litellm_metadata: {
-          user: userIdentifier,
-        },
       },
     };
   }
