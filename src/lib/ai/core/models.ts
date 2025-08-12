@@ -314,13 +314,15 @@ async function getModel(chatModel?: ChatModel): Promise<{
     userIdentifier = user?.[userHeaderValueField];
     providerOptions = {
       anthropic: {
-        metadata: {
-          user_id: userIdentifier,
+        user_id: userIdentifier,
+        litellm_metadata: {
+          user: userIdentifier,
         },
       },
       google: {
-        metadata: {
-          user_id: userIdentifier,
+        user_id: userIdentifier,
+        litellm_metadata: {
+          user: userIdentifier,
         },
       },
     };
