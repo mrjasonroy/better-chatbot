@@ -44,17 +44,12 @@ vi.mock("lib/db/pg/repositories/mcp-oauth-repository.pg", () => ({
 describe("OAuth Integration with File-Based Server Sync", () => {
   let mockLogger: any;
   let mockMcpRepository: any;
-  let _mockOAuthRepository: any;
 
   beforeEach(async () => {
     // Get the mocked repositories
     const { mcpRepository } = await import("lib/db/repository");
-    const { pgMcpOAuthRepository } = await import(
-      "lib/db/pg/repositories/mcp-oauth-repository.pg"
-    );
 
     mockMcpRepository = mcpRepository;
-    _mockOAuthRepository = pgMcpOAuthRepository;
 
     vi.clearAllMocks();
 
@@ -72,7 +67,6 @@ describe("OAuth Integration with File-Based Server Sync", () => {
         id: "file-server-oauth-test",
         name: "OAuth Test Server",
         config: { url: "https://oauth.example.com" },
-        enabled: true,
         isFileBased: true,
       },
     ];
@@ -83,7 +77,6 @@ describe("OAuth Integration with File-Based Server Sync", () => {
       id: "file-server-oauth-test",
       name: "OAuth Test Server",
       config: { url: "https://oauth.example.com" },
-      enabled: true,
     });
 
     // Sync file-based servers to database
@@ -110,14 +103,12 @@ describe("OAuth Integration with File-Based Server Sync", () => {
         id: "server-1",
         name: "Server 1",
         config: { url: "https://server1.com" },
-        enabled: true,
         isFileBased: true,
       },
       {
         id: "server-2",
         name: "Server 2",
         config: { url: "https://server2.com" },
-        enabled: true,
         isFileBased: true,
       },
     ];
@@ -156,7 +147,6 @@ describe("OAuth Integration with File-Based Server Sync", () => {
         id: "error-server",
         name: "Error Server",
         config: { url: "https://error.com" },
-        enabled: true,
         isFileBased: true,
       },
     ];

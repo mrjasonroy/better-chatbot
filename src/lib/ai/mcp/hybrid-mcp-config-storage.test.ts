@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { createHybridMCPConfigStorage } from "./hybrid-mcp-config-storage";
+import { generateDeterministicUUID } from "./utils";
 import { readFile } from "fs/promises";
 import { mcpRepository } from "lib/db/repository";
 import type { MCPClientsManager } from "./create-mcp-clients-manager";
@@ -62,7 +63,37 @@ describe("Hybrid MCP Config Storage", () => {
   describe("loadAll", () => {
     it("should load default and user servers", async () => {
       mockReadFile.mockResolvedValue(JSON.stringify(mockDefaultConfig));
-      mockMcpRepository.selectAll.mockResolvedValue(mockUserServers);
+      // Simulate DB containing both user and synced default servers
+      const defaultServersFromDb: McpServerSelect[] = [
+        {
+          id: generateDeterministicUUID({
+            name: "test-server",
+            config: mockDefaultConfig["test-server"],
+          }),
+          name: "test-server",
+          config: mockDefaultConfig["test-server"],
+          isFileBased: true,
+        },
+        {
+          id: generateDeterministicUUID({
+            name: "api-server",
+            config: {
+              ...mockDefaultConfig["api-server"],
+              headers: { Authorization: "test-api-key" },
+            },
+          }),
+          name: "api-server",
+          config: {
+            ...mockDefaultConfig["api-server"],
+            headers: { Authorization: "test-api-key" },
+          },
+          isFileBased: true,
+        },
+      ];
+      mockMcpRepository.selectAll.mockResolvedValue([
+        ...defaultServersFromDb,
+        ...mockUserServers,
+      ]);
 
       const result = await storage.loadAll();
 
@@ -93,7 +124,23 @@ describe("Hybrid MCP Config Storage", () => {
 
     it("should substitute environment variables in default configs", async () => {
       mockReadFile.mockResolvedValue(JSON.stringify(mockDefaultConfig));
-      mockMcpRepository.selectAll.mockResolvedValue([]);
+      // Simulate DB containing the synced default with substituted env var
+      const apiServerFromDb: McpServerSelect = {
+        id: generateDeterministicUUID({
+          name: "api-server",
+          config: {
+            ...mockDefaultConfig["api-server"],
+            headers: { Authorization: "test-api-key" },
+          },
+        }),
+        name: "api-server",
+        config: {
+          ...mockDefaultConfig["api-server"],
+          headers: { Authorization: "test-api-key" },
+        },
+        isFileBased: true,
+      };
+      mockMcpRepository.selectAll.mockResolvedValue([apiServerFromDb]);
 
       const result = await storage.loadAll();
 
@@ -103,7 +150,18 @@ describe("Hybrid MCP Config Storage", () => {
 
     it("should generate deterministic UUIDs for default servers", async () => {
       mockReadFile.mockResolvedValue(JSON.stringify(mockDefaultConfig));
-      mockMcpRepository.selectAll.mockResolvedValue([]);
+      const defaultsFromDb: McpServerSelect[] = [
+        {
+          id: generateDeterministicUUID({
+            name: "test-server",
+            config: mockDefaultConfig["test-server"],
+          }),
+          name: "test-server",
+          config: mockDefaultConfig["test-server"],
+          isFileBased: true,
+        },
+      ];
+      mockMcpRepository.selectAll.mockResolvedValue(defaultsFromDb);
 
       const result1 = await storage.loadAll();
       const result2 = await storage.loadAll();

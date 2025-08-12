@@ -43,6 +43,7 @@ vi.mock("./utils", () => ({
     .mockImplementation((servers) =>
       servers.map((s) => ({ ...s, isFileBased: true })),
     ),
+  generateDeterministicUUID: vi.fn(() => "mock-uuid-1234"),
 }));
 
 vi.mock("lib/db/repository", () => ({
@@ -155,6 +156,28 @@ describe("File-based MCP Config Storage", () => {
       });
 
       mockReadFile.mockResolvedValue(configContent);
+      // Simulate DB containing the synced file-based servers
+      const now = new Date();
+      vi.mocked(
+        (await import("lib/db/repository")).mcpRepository,
+      ).selectAll.mockResolvedValue([
+        {
+          id: "test-server",
+          name: "test-server",
+          config: mockServerConfig,
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        } as any,
+        {
+          id: "another-server",
+          name: "another-server",
+          config: { url: "https://example.com" },
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        } as any,
+      ]);
 
       const result = await storage.loadAll();
 
@@ -171,6 +194,8 @@ describe("File-based MCP Config Storage", () => {
 
     it("should return empty array for empty config file", async () => {
       mockReadFile.mockResolvedValue("{}");
+      const { mcpRepository } = await import("lib/db/repository");
+      vi.mocked(mcpRepository).selectAll.mockResolvedValue([]);
 
       const result = await storage.loadAll();
 
@@ -182,6 +207,8 @@ describe("File-based MCP Config Storage", () => {
       (error as any).code = "ENOENT";
 
       mockReadFile.mockRejectedValue(error);
+      const { mcpRepository } = await import("lib/db/repository");
+      vi.mocked(mcpRepository).selectAll.mockResolvedValue([]);
 
       const result = await storage.loadAll();
 
@@ -377,6 +404,27 @@ describe("File-based MCP Config Storage", () => {
       });
 
       mockReadFile.mockResolvedValue(configContent);
+      const now = new Date();
+      vi.mocked(
+        (await import("lib/db/repository")).mcpRepository,
+      ).selectAll.mockResolvedValue([
+        {
+          id: "server1",
+          name: "server1",
+          config: { command: "python" },
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        } as any,
+        {
+          id: "server2",
+          name: "server2",
+          config: { url: "https://example.com" },
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        } as any,
+      ]);
 
       const result = await storage.loadAll();
 
@@ -405,6 +453,19 @@ describe("File-based MCP Config Storage", () => {
       });
 
       mockReadFile.mockResolvedValue(configContent);
+      const now = new Date();
+      vi.mocked(
+        (await import("lib/db/repository")).mcpRepository,
+      ).selectAll.mockResolvedValue([
+        {
+          id: "test-server",
+          name: "test-server",
+          config: mockServerConfig,
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        } as any,
+      ]);
 
       const result = await storage.loadAll();
 
