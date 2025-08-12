@@ -36,7 +36,7 @@ import useSWR from "swr";
 import { getLocaleAction } from "@/i18n/get-locale";
 import { useCallback } from "react";
 import { GithubIcon } from "ui/github-icon";
-import { DiscordIcon } from "ui/discord-icon";
+// import { DiscordIcon } from "ui/discord-icon";
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { Session, User } from "better-auth";
 
