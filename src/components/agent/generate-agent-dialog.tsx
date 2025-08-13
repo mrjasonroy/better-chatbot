@@ -37,6 +37,7 @@ export function GenerateAgentDialog({
   const [generateModel, setGenerateModel] = useState<ChatModel | undefined>(
     appStore.getState().chatModel,
   );
+  console.log("generateModel", generateModel);
   const [generateAgentPrompt, setGenerateAgentPrompt] = useState("");
   const [submittedPrompt, setSubmittedPrompt] = useState("");
 
@@ -45,6 +46,7 @@ export function GenerateAgentDialog({
     schema: AgentGenerateSchema,
     onFinish(event) {
       if (event.error) {
+        console.log("event.error", event.error);
         handleErrorWithToast(event.error);
       }
       if (event.object) {
@@ -57,7 +59,8 @@ export function GenerateAgentDialog({
       onOpenChange(false);
       setGenerateAgentPrompt("");
       setSubmittedPrompt("");
-      setGenerateModel(undefined);
+      // Reset to current global default model
+      setGenerateModel(appStore.getState().chatModel);
     },
   });
 
@@ -110,6 +113,7 @@ export function GenerateAgentDialog({
               placeholder="input prompt here..."
               disabled={isLoading}
               onChange={(e) => setGenerateAgentPrompt(e.target.value)}
+              data-testid="agent-generate-agent-prompt-textarea"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.metaKey && !isLoading) {
                   e.preventDefault();
@@ -126,6 +130,7 @@ export function GenerateAgentDialog({
               <Button
                 disabled={!generateAgentPrompt.trim() || isLoading}
                 size="sm"
+                data-testid="agent-generate-agent-prompt-submit-button"
                 onClick={submitGenerateAgent}
                 className="text-xs"
               >
