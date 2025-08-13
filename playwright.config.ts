@@ -1,8 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config } from "dotenv";
 
-/**
- * @see https://playwright.dev/docs/test-configuration
- */
+// Load environment variables
+if (process.env.CI) {
+  config({ path: ".env.test" });
+} else {
+  config();
+}
+
 export default defineConfig({
   testDir: "./tests",
   /* Maximum time one test can run for. */
@@ -78,11 +83,12 @@ export default defineConfig({
       testMatch: /.*unauthenticated.*\.spec\.ts/,
     },
 
-    // Mobile tests - run key workflows on mobile (subset for efficiency)
+    // Mobile tests - Chrome with mobile viewport (faster than real mobile browsers)
     {
       name: "mobile",
       use: {
-        ...devices["iPhone 13"],
+        ...devices["Desktop Chrome"],
+        viewport: { width: 375, height: 667 }, // iPhone SE size
         storageState: "tests/.auth/user1.json",
       },
       dependencies: ["setup"],

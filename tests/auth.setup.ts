@@ -1,12 +1,13 @@
 import { test as setup, expect } from "@playwright/test";
-import fs from "node:fs";
+import type { Page } from "@playwright/test";
+import * as fs from "node:fs";
 
 function uniqueSuffix(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 async function registerViaUi(
-  page: import("@playwright/test").Page,
+  page: Page,
   { email, name, password }: { email: string; name: string; password: string },
 ) {
   await page.goto("/sign-up");
@@ -29,10 +30,7 @@ async function registerViaUi(
   await page.waitForURL("**/");
   await page.waitForLoadState("networkidle");
 
-  // Sanity check that some authenticated UI is present (best-effort)
-  // This is optional; adjust if there is a stable selector on the home page when logged in
-  // We keep it lenient to avoid flakes.
-  await expect(page).toHaveURL(/\/?$/);
+  await expect(page.getByText(/New Chat/)).toBeVisible();
 }
 
 setup.beforeAll(async () => {

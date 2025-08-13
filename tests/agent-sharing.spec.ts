@@ -14,20 +14,14 @@ async function createAgent(
   await page.goto("/agent/new");
   await page.waitForLoadState("networkidle");
 
-  await page.waitForSelector(
-    '[data-testid="agent-save-button"]:not([disabled])',
-    { timeout: 10000 },
-  );
+  await expect(page.getByTestId("agent-save-button")).toBeEnabled({
+    timeout: 10000,
+  });
 
-  const nameInput = page.locator('[data-testid="agent-name-input"]');
-  await nameInput.waitFor({ state: "visible" });
-  await nameInput.fill(name);
+  await page.getByTestId("agent-name-input").fill(name);
+  await page.getByTestId("agent-description-input").fill(description);
 
-  const descInput = page.locator('[data-testid="agent-description-input"]');
-  await descInput.waitFor({ state: "visible" });
-  await descInput.fill(description);
-
-  const saveButton = page.locator('[data-testid="agent-save-button"]');
+  const saveButton = page.getByTestId("agent-save-button");
   await expect(saveButton).toBeEnabled();
   await saveButton.click();
 
@@ -45,20 +39,16 @@ test.describe("Agent Creation and Sharing Workflow", () => {
       '[data-testid="agent-save-button"]:not([disabled])',
       { timeout: 10000 },
     );
-    const nameInput = page.locator('[data-testid="agent-name-input"]');
-    await nameInput.waitFor({ state: "visible" });
-    await nameInput.fill("Test Agent for Sharing");
-
-    const descInput = page.locator('[data-testid="agent-description-input"]');
-    await descInput.waitFor({ state: "visible" });
-    await descInput.fill("This agent tests the sharing workflow");
+    await page.getByTestId("agent-name-input").fill("Test Agent for Sharing");
+    await page
+      .getByTestId("agent-description-input")
+      .fill("This agent tests the sharing workflow");
 
     const roleInput = page.locator("#agent-role");
     if ((await roleInput.count()) > 0 && (await roleInput.isEnabled())) {
       await roleInput.fill("software testing and quality assurance");
     }
-    const saveButton = page.locator('[data-testid="agent-save-button"]');
-    await saveButton.waitFor({ state: "visible" });
+    const saveButton = page.getByTestId("agent-save-button");
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
@@ -118,9 +108,7 @@ test.describe("Agent Creation and Sharing Workflow", () => {
 
     // If we're on an agent edit page, check for the name input
     if (currentUrl.includes("/agent/")) {
-      await expect(
-        page.locator('[data-testid="agent-name-input"]'),
-      ).toHaveValue(agentName);
+      await expect(page.getByTestId("agent-name-input")).toHaveValue(agentName);
     }
   });
 
@@ -143,7 +131,7 @@ test.describe("Agent Creation and Sharing Workflow", () => {
     );
 
     // Edit the name
-    const nameInput = page.locator('[data-testid="agent-name-input"]');
+    const nameInput = page.getByTestId("agent-name-input");
     await nameInput.clear();
     await nameInput.fill("Updated Agent Name");
 
@@ -155,7 +143,7 @@ test.describe("Agent Creation and Sharing Workflow", () => {
     await descriptionInput.fill("Updated description after editing");
 
     // Save changes
-    const saveButton = page.locator('[data-testid="agent-save-button"]');
+    const saveButton = page.getByTestId("agent-save-button");
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
@@ -228,7 +216,7 @@ test.describe("Agent Creation and Sharing Workflow", () => {
       await weatherExample.click();
 
       // Check if name field was populated
-      const nameInput = page.locator('[data-testid="agent-name-input"]');
+      const nameInput = page.getByTestId("agent-name-input");
       const nameValue = await nameInput.inputValue();
       expect(nameValue).toBeTruthy();
       expect(nameValue).toContain("Weather");
@@ -246,11 +234,9 @@ test.describe("Agent Creation and Sharing Workflow", () => {
     );
 
     // Fill basic info
+    await page.getByTestId("agent-name-input").fill("Agent with Instructions");
     await page
-      .locator('[data-testid="agent-name-input"]')
-      .fill("Agent with Instructions");
-    await page
-      .locator('[data-testid="agent-description-input"]')
+      .getByTestId("agent-description-input")
       .fill("Has custom instructions");
 
     // Add instructions in the system prompt
@@ -264,7 +250,7 @@ test.describe("Agent Creation and Sharing Workflow", () => {
     }
 
     // Save the agent
-    const saveButton = page.locator('[data-testid="agent-save-button"]');
+    const saveButton = page.getByTestId("agent-save-button");
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
@@ -284,16 +270,14 @@ test.describe("Agent Creation and Sharing Workflow", () => {
     expect(page.url()).toContain("/agents");
 
     // Should see the agents page title
-    await expect(page.locator('[data-testid="agents-title"]')).toBeVisible();
+    await expect(page.getByTestId("agents-title")).toBeVisible();
 
     await page.goto("/agent/new");
     await page.waitForLoadState("networkidle");
     expect(page.url()).toContain("/agent/new");
 
     // Should see the agent form
-    await expect(
-      page.locator('[data-testid="agent-name-input"]'),
-    ).toBeVisible();
+    await expect(page.getByTestId("agent-name-input")).toBeVisible();
 
     // Navigate back to home
     await page.goto("/");

@@ -84,7 +84,7 @@ test.describe("Unauthenticated User Experience", () => {
 
     const hasStyledElements = await page.evaluate(() => {
       const elements = document.querySelectorAll("*");
-      for (const el of elements) {
+      for (const el of Array.from(elements)) {
         const classes = el.className;
         if (
           typeof classes === "string" &&

@@ -264,6 +264,9 @@ ANTHROPIC_API_KEY=****
 OPENROUTER_API_KEY=****
 OLLAMA_BASE_URL=http://localhost:11434/api
 
+# (Optional) Default model to use when none is specified
+# Format: provider/model (e.g., openRouter/qwen3-8b:free for free OpenRouter models)
+DEFAULT_MODEL=
 
 # Secret for Better Auth (generate with: npx @better-auth/cli@latest secret)
 BETTER_AUTH_SECRET=****

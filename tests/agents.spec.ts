@@ -22,7 +22,7 @@ test.describe("Authenticated App Navigation", () => {
     expect(currentUrl).toContain("/agents");
 
     // Should see agents page content
-    await expect(page.locator('[data-testid="agents-title"]')).toBeVisible();
+    await expect(page.getByTestId("agents-title")).toBeVisible();
   });
 
   test("should navigate to new agent page", async ({ page }) => {
@@ -33,9 +33,7 @@ test.describe("Authenticated App Navigation", () => {
     expect(page.url()).toContain("/agent/new");
 
     // Should see agent creation form
-    await expect(
-      page.locator('[data-testid="agent-name-input"]'),
-    ).toBeVisible();
+    await expect(page.getByTestId("agent-name-input")).toBeVisible();
   });
 
   test("should have sidebar with agent list", async ({ page }) => {

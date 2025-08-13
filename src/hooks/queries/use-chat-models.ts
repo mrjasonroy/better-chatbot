@@ -9,6 +9,7 @@ export const useChatModels = () => {
       models: {
         name: string;
         isToolCallUnsupported: boolean;
+        isDefault: boolean;
       }[];
     }[]
   >("/api/chat/models", fetcher, {
@@ -18,9 +19,23 @@ export const useChatModels = () => {
     onSuccess: (data) => {
       const status = appStore.getState();
       if (!status.chatModel) {
-        const firstProvider = data[0].provider;
-        const model = data[0].models[0].name;
-        appStore.setState({ chatModel: { provider: firstProvider, model } });
+        // Find the default model first
+        const defaultModel = data.flatMap((p) =>
+          p.models
+            .filter((m) => m.isDefault)
+            .map((m) => ({
+              provider: p.provider,
+              model: m.name,
+            })),
+        )[0];
+
+        // Use default model if available, otherwise fallback to first model
+        const modelToSet = defaultModel || {
+          provider: data[0].provider,
+          model: data[0].models[0].name,
+        };
+
+        appStore.setState({ chatModel: modelToSet });
       }
     },
   });

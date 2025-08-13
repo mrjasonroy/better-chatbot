@@ -401,7 +401,7 @@ export default function PromptInput({
 
                 <div className="flex-1" />
 
-                <SelectModel onSelect={setChatModel} defaultModel={chatModel}>
+                <SelectModel onSelect={setChatModel} currentModel={chatModel}>
                   <Button
                     variant={"ghost"}
                     size={"sm"}
@@ -418,7 +418,10 @@ export default function PromptInput({
                         ) : chatModel.provider === "google" ? (
                           <GeminiIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
                         ) : null}
-                        <span className="text-foreground group-data-[state=open]:text-foreground  ">
+                        <span
+                          className="text-foreground group-data-[state=open]:text-foreground  "
+                          data-testid="selected-model-name"
+                        >
                           {chatModel.model}
                         </span>
                       </>

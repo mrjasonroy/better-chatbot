@@ -34,7 +34,7 @@ pnpm test:e2e:debug
 1. **Database**: PostgreSQL instance with proper schema
 2. **Environment Variables**: 
    - `POSTGRES_URL` - Database connection string
-   - `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` - LLM provider keys
+   - `OPENROUTER_API_KEY` - OpenRouter API key (free tier available with models ending in `:free`)
    - `BETTER_AUTH_SECRET` - Authentication secret
 
 ## Test Features
@@ -89,3 +89,14 @@ npx playwright test --debug
 # Generate test report
 npx playwright show-report
 ```
+
+## Continuous Integration
+
+Tests run automatically on GitHub Actions with:
+- PostgreSQL 17 test database
+- OpenRouter API key with free models (20 requests/min, 50-1000 requests/day)
+- Clean test environment isolated from production
+- Parallel execution across multiple workers
+- Automatic artifact upload for debugging
+
+The workflow creates a fresh database for each test run and handles all cleanup automatically.

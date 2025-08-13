@@ -29,17 +29,17 @@ test.describe("Mobile Experience", () => {
     await page.goto("/agent/new");
     await page.waitForLoadState("networkidle");
 
-    const nameInput = page.locator('[data-testid="agent-name-input"]');
+    const nameInput = page.getByTestId("agent-name-input");
     await expect(nameInput).toBeVisible();
 
-    const saveButton = page.locator('[data-testid="agent-save-button"]');
+    const saveButton = page.getByTestId("agent-save-button");
     await saveButton.scrollIntoViewIfNeeded();
     await expect(saveButton).toBeVisible();
 
     await nameInput.tap();
     await nameInput.fill("Mobile Test Agent");
 
-    const descInput = page.locator('[data-testid="agent-description-input"]');
+    const descInput = page.getByTestId("agent-description-input");
     await descInput.tap();
     await descInput.fill("Created on mobile device");
 
@@ -86,7 +86,7 @@ test.describe("Mobile Experience", () => {
     await page.goto("/agent/new");
     await page.waitForLoadState("networkidle");
 
-    const nameInput = page.locator('[data-testid="agent-name-input"]');
+    const nameInput = page.getByTestId("agent-name-input");
     await nameInput.tap();
     await page.keyboard.type("Mobile typing test");
     await expect(nameInput).toHaveValue("Mobile typing test");
@@ -130,7 +130,7 @@ test.describe("Mobile Experience", () => {
     await page.goto("/agent/new");
     await page.waitForLoadState("networkidle");
 
-    const saveButton = page.locator('[data-testid="agent-save-button"]');
+    const saveButton = page.getByTestId("agent-save-button");
     await expect(saveButton).toBeVisible();
 
     const box = await saveButton.boundingBox();
