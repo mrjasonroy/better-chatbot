@@ -390,6 +390,7 @@ export default function EditAgent({
                 disabled={isLoading || !hasEditAccess}
                 className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
                 id="agent-name"
+                data-testid="agent-name-input"
                 placeholder={t("Agent.agentNamePlaceholder")}
                 readOnly={!hasEditAccess}
               />
@@ -415,6 +416,7 @@ export default function EditAgent({
           ) : (
             <Input
               id="agent-description"
+              data-testid="agent-description-input"
               disabled={isLoading || !hasEditAccess}
               placeholder={t("Agent.agentDescriptionPlaceholder")}
               className="hover:bg-input placeholder:text-xs bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
@@ -466,6 +468,7 @@ export default function EditAgent({
             ) : (
               <Textarea
                 id="agent-prompt"
+                data-testid="agent-prompt-textarea"
                 ref={textareaRef}
                 disabled={isLoading || !hasEditAccess}
                 placeholder={t("Agent.agentInstructionsPlaceholder")}
@@ -527,6 +530,7 @@ export default function EditAgent({
               className={cn("mt-2", !initialAgent || !isOwner ? "ml-auto" : "")}
               onClick={saveAgent}
               disabled={isLoading}
+              data-testid="agent-save-button"
             >
               {isSaving ? t("Common.saving") : t("Common.save")}
               {isSaving && <Loader className="size-4 animate-spin" />}

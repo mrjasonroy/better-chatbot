@@ -100,7 +100,9 @@ export function AgentsList({
   return (
     <div className="w-full flex flex-col gap-4 p-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t("Layout.agents")}</h1>
+        <h1 className="text-2xl font-bold" data-testid="agents-title">
+          {t("Layout.agents")}
+        </h1>
         <Link href="/agent/new">
           <Button variant="ghost">
             <Plus />

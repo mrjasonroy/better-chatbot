@@ -38,7 +38,12 @@
     "docker:redis": "docker run --name better-chatbot-redis -p 6379:6379 -d redis:7-alpine",
     "docker:app": "docker build -f docker/Dockerfile -t better-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 better-chatbot",
     "prepare": "husky",
-    "check": "pnpm lint:fix && pnpm check-types && pnpm test"
+    "check": "pnpm lint:fix && pnpm check-types && pnpm test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "playwright:install": "playwright install"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
@@ -118,6 +123,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@playwright/test": "^1.54.2",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^20.19.9",
@@ -138,10 +144,7 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "*.{js,json,mjs,ts,yaml,tsx,css}": [
-      "pnpm format",
-      "pnpm lint:fix"
-    ]
+    "*.{js,json,mjs,ts,yaml,tsx,css}": ["pnpm format", "pnpm lint:fix"]
   },
   "packageManager": "pnpm@10.2.1",
   "engines": {

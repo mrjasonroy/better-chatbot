@@ -66,7 +66,12 @@ export function ShareableCard({
             </div>
 
             <div className="flex flex-col justify-around min-w-0 flex-1 overflow-hidden">
-              <span className="truncate font-medium">{item.name}</span>
+              <span
+                className="truncate font-medium"
+                data-testid={`${type}-card-name`}
+              >
+                {item.name}
+              </span>
               <div className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
                 <time className="shrink-0">
                   {format(item.updatedAt, "MMM d, yyyy")}

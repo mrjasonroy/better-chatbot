@@ -193,7 +193,12 @@ export function AppSidebarAgents() {
                                 </div>
 
                                 <div className="flex items-center min-w-0 w-full">
-                                  <p className="truncate">{agent.name}</p>
+                                  <p
+                                    className="truncate"
+                                    data-testid="sidebar-agent-name"
+                                  >
+                                    {agent.name}
+                                  </p>
                                 </div>
                                 <div
                                   onClick={(e) => {
