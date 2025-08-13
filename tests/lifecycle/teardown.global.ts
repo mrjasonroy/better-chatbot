@@ -5,7 +5,7 @@ import {
   AgentSchema,
   BookmarkSchema,
   ChatThreadSchema,
-} from "../src/lib/db/pg/schema.pg";
+} from "../../src/lib/db/pg/schema.pg";
 import { eq, like, or } from "drizzle-orm";
 import { config } from "dotenv";
 

@@ -14,18 +14,18 @@ jobs:
     env:
       # Database
       POSTGRES_URL: postgresql://testuser:testpass@localhost:5432/better_chatbot_test
-      
+
       # Authentication
       BETTER_AUTH_SECRET: test-secret-key-for-ci-only-not-for-production-use
       BETTER_AUTH_URL: http://localhost:3000
-      
+
       # Application
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
-      
+
       # LLM Provider (OpenRouter with free models)
       OPENROUTER_API_KEY: ${{ secrets.E2E_OPENROUTER_API_KEY || 'test-key' }}
-      DEFAULT_MODEL: openRouter/qwen3-8b:free
-      
+      E2E_DEFAULT_MODEL: openRouter/qwen3-8b:free
+
       # Feature flags
       DISABLE_SIGN_UP: 0
       DISABLE_EMAIL_SIGN_IN: 0
@@ -59,14 +59,14 @@ jobs:
           cache: 'pnpm'
 
       - name: Get pnpm store directory
+        id: pnpm-cache
         shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
       - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
-          path: ${{ env.STORE_PATH }}
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
@@ -90,13 +90,6 @@ jobs:
 
       - name: Run E2E tests
         run: pnpm test:e2e
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

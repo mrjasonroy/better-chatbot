@@ -63,8 +63,11 @@ interface ShareableActionsProps {
   isBookmarked?: boolean;
   editHref?: string;
   onVisibilityChange?: (visibility: Visibility) => void;
+  isVisibilityChangeLoading?: boolean;
   onBookmarkToggle?: (isBookmarked: boolean) => void;
+  isBookmarkToggleLoading?: boolean;
   onDelete?: () => void;
+  isDeleteLoading?: boolean;
   renderActions?: () => React.ReactNode;
 }
 
@@ -78,6 +81,9 @@ export function ShareableActions({
   onBookmarkToggle,
   onDelete,
   renderActions,
+  isVisibilityChangeLoading = false,
+  isBookmarkToggleLoading = false,
+  isDeleteLoading = false,
 }: ShareableActionsProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -110,6 +116,8 @@ export function ShareableActions({
                         variant="ghost"
                         size="icon"
                         className="size-8 data-[state=open]:bg-input text-muted-foreground hover:text-foreground"
+                        data-testid="visibility-button"
+                        disabled={isVisibilityChangeLoading}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -127,7 +135,11 @@ export function ShareableActions({
                   <DropdownMenuItem
                     key={visibilityItem.value}
                     className="cursor-pointer"
-                    disabled={visibility === visibilityItem.value}
+                    disabled={
+                      visibility === visibilityItem.value ||
+                      isVisibilityChangeLoading
+                    }
+                    data-testid={`visibility-${visibilityItem.value}`}
                     onClick={() => onVisibilityChange(visibilityItem.value)}
                   >
                     {visibilityItem.icon}
@@ -164,6 +176,8 @@ export function ShareableActions({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
+              data-testid="bookmark-button"
+              disabled={isBookmarkToggleLoading}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -191,6 +205,11 @@ export function ShareableActions({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
+              disabled={
+                isVisibilityChangeLoading ||
+                isDeleteLoading ||
+                isBookmarkToggleLoading
+              }
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -215,6 +234,7 @@ export function ShareableActions({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
+              disabled={isDeleteLoading}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

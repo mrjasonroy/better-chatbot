@@ -99,7 +99,9 @@ export function AppSidebarAgents() {
         <SidebarMenu className="group/agents">
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="font-semibold">
-              <Link href="/agents">{t("Layout.agents")}</Link>
+              <Link href="/agents" data-testid="agents-link">
+                {t("Layout.agents")}
+              </Link>
             </SidebarMenuButton>
             <SidebarMenuAction
               className="group-hover/agents:opacity-100 opacity-0 transition-opacity"

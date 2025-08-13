@@ -13,6 +13,8 @@
     "build:local": "cross-env NO_HTTPS='1' next build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "lint": "next lint && biome lint --write --unsafe",
     "lint:fix": "next lint --fix && biome lint --write --unsafe",
     "format": "biome format --write",
@@ -38,12 +40,8 @@
     "docker:redis": "docker run --name better-chatbot-redis -p 6379:6379 -d redis:7-alpine",
     "docker:app": "docker build -f docker/Dockerfile -t better-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 better-chatbot",
     "prepare": "husky",
-    "check": "pnpm lint:fix && pnpm check-types && pnpm test",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:headed": "playwright test --headed",
-    "playwright:install": "playwright install"
+    "playwright:install": "playwright install",
+    "check": "pnpm lint:fix && pnpm check-types && pnpm test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",

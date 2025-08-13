@@ -406,6 +406,7 @@ export default function PromptInput({
                     variant={"ghost"}
                     size={"sm"}
                     className="rounded-full group data-[state=open]:bg-input! hover:bg-input! mr-1"
+                    data-testid="model-selector-button"
                   >
                     {chatModel?.model ? (
                       <>

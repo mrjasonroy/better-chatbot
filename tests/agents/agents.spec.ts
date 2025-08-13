@@ -1,17 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Authenticated App Navigation", () => {
-  test("should access dashboard when authenticated", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
-    // Should stay on dashboard (not redirect to sign-in)
-    const currentUrl = page.url();
-    expect(!currentUrl.includes("/sign-in")).toBeTruthy();
-
-    // Basic app health check
-    await expect(page.locator("body")).toBeVisible();
-  });
+test.describe("Agent Access Spec", () => {
+  test.use({ storageState: "tests/.auth/user1.json" });
 
   test("should access agents page when authenticated", async ({ page }) => {
     await page.goto("/agents");

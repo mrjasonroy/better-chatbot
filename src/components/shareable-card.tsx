@@ -31,6 +31,9 @@ interface ShareableCardProps {
   onBookmarkToggle?: (itemId: string, isBookmarked: boolean) => void;
   onVisibilityChange?: (itemId: string, visibility: Visibility) => void;
   onDelete?: (itemId: string) => void;
+  isVisibilityChangeLoading?: boolean;
+  isBookmarkToggleLoading?: boolean;
+  isDeleteLoading?: boolean;
 }
 
 export function ShareableCard({

@@ -157,6 +157,7 @@ export default function EditAgent({
 
   const saveAgent = useCallback(() => {
     if (initialAgent) {
+      setIsSaving(true);
       safe(() => AgentUpdateSchema.parse({ ...agent }))
         .map(JSON.stringify)
         .map(async (body) =>
@@ -194,6 +195,7 @@ export default function EditAgent({
 
   const updateVisibility = useCallback(
     async (visibility: Visibility) => {
+      setIsSaving(true);
       if (initialAgent?.id) {
         safe(() => AgentUpdateSchema.parse({ visibility }))
           .map(JSON.stringify)
@@ -218,6 +220,7 @@ export default function EditAgent({
   );
 
   const deleteAgent = useCallback(async () => {
+    setIsSaving(true);
     if (!initialAgent?.id) return;
 
     const ok = await notify.confirm({
@@ -231,6 +234,7 @@ export default function EditAgent({
       });
 
       invalidateAgents();
+      setIsSaving(false);
       toast.success(t("Agent.deleted"));
       router.push("/agents");
     } catch (error) {
@@ -368,6 +372,7 @@ export default function EditAgent({
                     visibility={agent.visibility || "private"}
                     isOwner={true}
                     onVisibilityChange={updateVisibility}
+                    isVisibilityChangeLoading={isSaving}
                   />
                 )}
               </div>

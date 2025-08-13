@@ -12,7 +12,6 @@ import {
   openaiCompatibleModelsSafeParse,
 } from "./create-openai-compatiable";
 import { ChatModel } from "app-types/chat";
-import logger from "logger";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -84,49 +83,7 @@ export const isToolCallUnsupportedModel = (model: LanguageModel) => {
   return allUnsupportedModels.has(model);
 };
 
-const resolveDefaultModel = () => {
-  const defaultModelEnv = process.env.DEFAULT_MODEL;
-
-  if (defaultModelEnv) {
-    const parts = defaultModelEnv.split("/");
-
-    if (parts.length !== 2) {
-      logger.warn(
-        `Invalid DEFAULT_MODEL format: "${defaultModelEnv}". Expected format: "provider/model". Using first available model.`,
-      );
-    } else {
-      const [provider, model] = parts;
-
-      if (!allModels[provider]) {
-        const availableProviders = Object.keys(allModels).join(", ");
-        logger.warn(
-          `DEFAULT_MODEL provider "${provider}" not found. Available providers: ${availableProviders}. Using first available model.`,
-        );
-      } else if (!allModels[provider][model]) {
-        const availableModels = Object.keys(allModels[provider]).join(", ");
-        logger.warn(
-          `DEFAULT_MODEL "${model}" not found in provider "${provider}". Available models: ${availableModels}. Using first available model.`,
-        );
-      } else {
-        logger.info(`Using DEFAULT_MODEL: ${defaultModelEnv}`);
-        return { provider, model, instance: allModels[provider][model] };
-      }
-    }
-  }
-
-  const firstProvider = Object.keys(allModels)[0];
-  const firstModel = Object.keys(allModels[firstProvider])[0];
-  logger.info(`Using fallback model: ${firstProvider}/${firstModel}`);
-
-  return {
-    provider: firstProvider,
-    model: firstModel,
-    instance: allModels[firstProvider][firstModel],
-  };
-};
-
-const defaultModelResolved = resolveDefaultModel();
-const fallbackModel = defaultModelResolved.instance;
+const fallbackModel = staticModels.openai["gpt-4.1"];
 
 export const customModelProvider = {
   modelsInfo: Object.entries(allModels).map(([provider, models]) => ({
@@ -134,17 +91,10 @@ export const customModelProvider = {
     models: Object.entries(models).map(([name, model]) => ({
       name,
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
-      isDefault:
-        provider === defaultModelResolved.provider &&
-        name === defaultModelResolved.model,
     })),
   })),
   getModel: (model?: ChatModel): LanguageModel => {
     if (!model) return fallbackModel;
     return allModels[model.provider]?.[model.model] || fallbackModel;
   },
-  getDefaultModel: () => ({
-    provider: defaultModelResolved.provider,
-    model: defaultModelResolved.model,
-  }),
 };
