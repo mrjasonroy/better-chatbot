@@ -9,7 +9,8 @@ import {
 import { customModelProvider } from "lib/ai/models";
 import globalLogger from "logger";
 import { buildUserSystemPrompt } from "lib/ai/prompts";
-import { userRepository } from "lib/db/repository";
+import { getUserPreferences } from "lib/user/server";
+
 import { colorize } from "consola/utils";
 
 const logger = globalLogger.withDefaults({
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
     const model = customModelProvider.getModel(chatModel);
     const userPreferences =
-      (await userRepository.getPreferences(session.user.id)) || undefined;
+      (await getUserPreferences(session.user.id)) || undefined;
 
     return streamText({
       model,
