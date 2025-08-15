@@ -2,7 +2,6 @@
 
 import { useSidebar } from "ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { Toggle } from "ui/toggle";
 import {
   AudioWaveformIcon,
   ChevronDown,
@@ -37,13 +36,19 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 flex items-center px-3 py-2">
       <Tooltip>
         <TooltipTrigger asChild>
-          <Toggle
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label="Toggle Sidebar"
-            onClick={toggleSidebar}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleSidebar();
+            }}
             data-testid="sidebar-toggle"
           >
             <PanelLeft />
-          </Toggle>
+          </Button>
         </TooltipTrigger>
         <TooltipContent align="start" side="bottom">
           <div className="flex items-center gap-2">

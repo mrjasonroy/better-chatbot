@@ -1,0 +1,56 @@
+import { Card, CardHeader } from "ui/card";
+import { Avatar } from "ui/avatar";
+import { AvatarImage } from "ui/avatar";
+import { AvatarFallback } from "ui/avatar";
+import { CardTitle } from "ui/card";
+import { CardDescription } from "ui/card";
+import { Badge } from "ui/badge";
+import { BasicUserWithLastLogin } from "app-types/user";
+import { UserRoleBadges } from "./user-role-badges";
+import { getUserAvatar } from "lib/user/utils";
+
+export function UserDetailCard({
+  user,
+  currentUserId,
+}: {
+  user: BasicUserWithLastLogin;
+  currentUserId: string;
+  view?: "admin" | "user";
+}) {
+  return (
+    <Card data-testid="user-detail-card">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={getUserAvatar(user)} />
+              <AvatarFallback>
+                {user.name.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-2xl" data-testid="user-name">
+                  {user.name}
+                </CardTitle>
+                {user.id === currentUserId && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs"
+                    data-testid="current-user-badge"
+                  >
+                    You
+                  </Badge>
+                )}
+              </div>
+              <CardDescription data-testid="user-email">
+                {user.email}
+              </CardDescription>
+              <UserRoleBadges user={user} showBanned={true} />
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+}

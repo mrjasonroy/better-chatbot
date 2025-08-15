@@ -85,6 +85,9 @@ jobs:
       - name: Run database migrations
         run: pnpm db:push
 
+      - name: Seed test users once before all tests
+        run: pnpm seed:test-users
+
       - name: Build application
         run: pnpm build:local
 

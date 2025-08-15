@@ -27,7 +27,7 @@ export default defineConfig({
   globalTeardown: "./tests/lifecycle/teardown.global.ts",
 
   projects: [
-    // Setup project to create authentication states
+    // Setup project to create authentication states from seeded users
     {
       name: "setup",
       testMatch: /.*\.setup\.ts/,
@@ -38,9 +38,21 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
       },
       dependencies: ["setup"],
-      testIgnore: [/.*\.setup\.ts/, /.*mobile.*\.spec\.ts/],
+      testIgnore: [
+        /.*\.setup\.ts/,
+        /.*mobile.*\.spec\.ts/,
+        /.*admin.*\.spec\.ts/,
+      ],
     },
-
+    // Admin tests (require seeded database)
+    {
+      name: "admin",
+      use: {
+        ...devices["Desktop Chrome"],
+      },
+      dependencies: ["setup"],
+      testMatch: /.*admin.*\.spec\.ts/,
+    },
     // Mobile tests
     {
       name: "mobile",

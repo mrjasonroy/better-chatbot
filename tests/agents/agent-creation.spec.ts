@@ -20,7 +20,7 @@ async function createAgent(
 }
 
 test.describe("Agent Creation and Sharing Workflow", () => {
-  test.use({ storageState: "tests/.auth/user1.json" });
+  test.use({ storageState: "tests/.auth/admin.json" });
 
   test("should create a new agent successfully", async ({ page }) => {
     await page.goto("/agent/new");

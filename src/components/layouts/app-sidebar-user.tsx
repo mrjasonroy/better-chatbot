@@ -25,6 +25,8 @@ import {
   Sun,
   MoonStar,
   ChevronRight,
+  Shield,
+  Settings,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { appStore } from "@/app/store";
@@ -38,15 +40,14 @@ import { useCallback } from "react";
 import { GithubIcon } from "ui/github-icon";
 import { DiscordIcon } from "ui/discord-icon";
 import { useThemeStyle } from "@/hooks/use-theme-style";
-import { Session, User } from "better-auth";
+import { UserSession } from "app-types/user";
+import { getIsUserAdmin, getUserAvatar } from "lib/user/utils";
 
-export function AppSidebarUser({
-  session,
-}: { session?: { session: Session; user: User } }) {
+export function AppSidebarUser({ session }: { session: UserSession }) {
   const appStoreMutate = appStore((state) => state.mutate);
   const t = useTranslations("Layout");
 
-  const user = session?.user;
+  const user = session.user;
 
   const logout = () => {
     authClient.signOut().finally(() => {
@@ -81,8 +82,8 @@ export function AppSidebarUser({
               <Avatar className="rounded-full size-8 border">
                 <AvatarImage
                   className="object-cover"
-                  src={user?.image || "/pf.png"}
-                  alt={user?.name || ""}
+                  src={getUserAvatar(user)}
+                  alt={user?.name || "User"}
                 />
                 <AvatarFallback>{user?.name?.slice(0, 1) || ""}</AvatarFallback>
               </Avatar>
@@ -99,8 +100,8 @@ export function AppSidebarUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-full">
                   <AvatarImage
-                    src={user?.image || "/pf.png"}
-                    alt={user?.name || ""}
+                    src={getUserAvatar(user)}
+                    alt={user?.name || "User"}
                   />
                   <AvatarFallback className="rounded-lg">
                     {user?.name?.slice(0, 1) || ""}
@@ -151,6 +152,25 @@ export function AppSidebarUser({
             >
               <DiscordIcon className="size-4 fill-foreground" />
               <span>{t("joinCommunity")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {getIsUserAdmin(session.user) && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => (window.location.href = "/admin")}
+                  className="cursor-pointer"
+                >
+                  <Shield className="size-4 text-foreground" />
+                  <span>Admin</span>
+                </DropdownMenuItem>
+              </>
+            )}
+            <DropdownMenuItem
+              onClick={() => appStoreMutate({ openUserSettings: true })}
+              className="cursor-pointer"
+            >
+              <Settings className="size-4 text-foreground" />
+              <span>User Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="cursor-pointer">
