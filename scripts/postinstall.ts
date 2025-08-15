@@ -43,7 +43,6 @@ async function main() {
       "Running in Docker environment, performing initial environment setup.",
     );
     await runCommand("pnpm initial:env", "Initial environment setup");
-    await runCommand("pnpm generate:schema", "JSON Schema generation");
   } else {
     console.log(
       "Running in a normal environment, performing initial environment setup.",
