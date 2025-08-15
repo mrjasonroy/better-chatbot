@@ -107,63 +107,82 @@ function createProviderInstance(
 ): AnyProvider | null {
   const userHeaderKey = process.env.API_USER_HEADER_KEY || "x-user-id";
 
-  const userHeaders: {
-    headers: Record<string, string>;
-  } = {
-    headers: {},
-  };
+  const userHeaders: Record<string, string> = {};
   if (userIdentifier) {
-    userHeaders.headers[userHeaderKey] = userIdentifier;
+    userHeaders[userHeaderKey] = userIdentifier;
   }
 
   switch (config.type) {
     case "openai":
       return createOpenAI({
         ...config.providerSettings,
-
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     case "google":
       return createGoogleGenerativeAI({
         ...config.providerSettings,
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     case "anthropic":
       return createAnthropic({
         ...config.providerSettings,
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     case "xai":
       return createXai({
         ...config.providerSettings,
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     case "openrouter":
       return createOpenRouter({
         ...config.providerSettings,
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     case "ollama":
       return createOllama({
         ...config.providerSettings,
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     case "azure-openai":
       return createAzure({
         ...config.providerSettings,
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     case "openai-compatible":
       return createOpenAICompatible({
         ...config.providerSettings,
-        ...userHeaders,
+        headers: {
+          ...config.providerSettings.headers,
+          ...userHeaders,
+        },
       });
 
     default: {
@@ -318,10 +337,14 @@ async function getModel(chatModel?: ChatModel): Promise<{
     userIdentifier = user?.[userHeaderValueField];
     providerOptions = {
       anthropic: {
-        user_id: userIdentifier,
+        metadata: {
+          user_id: userIdentifier,
+        },
       },
       google: {
-        user_id: userIdentifier,
+        metadata: {
+          user_id: userIdentifier,
+        },
       },
     };
   }

@@ -290,7 +290,7 @@ describe("User Identification in Models", () => {
 
       // Check that the custom header key is used
       expect(openaiMock.mockCreator.lastConfig).toHaveProperty(
-        "x-custom-user-id",
+        "headers.x-custom-user-id",
         "test@example.com",
       );
     });
@@ -321,7 +321,7 @@ describe("User Identification in Models", () => {
 
       // Check that the custom field value is used
       expect(openaiMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "custom-value",
       );
     });
@@ -349,7 +349,9 @@ describe("User Identification in Models", () => {
       expect(getSession).not.toHaveBeenCalled();
 
       // Check that no user header is added
-      expect(openaiMock.mockCreator.lastConfig).not.toHaveProperty("x-user-id");
+      expect(openaiMock.mockCreator.lastConfig).not.toHaveProperty(
+        "headers.x-user-id",
+      );
     });
   });
 
@@ -377,7 +379,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(openaiMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       expect(openaiMock.mockProvider).toHaveBeenCalledWith(
@@ -396,7 +398,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(anthropicMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       // Anthropic no longer passes user in model settings, only via providerOptions
@@ -422,7 +424,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(googleMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       // Google no longer passes user in model settings, only via providerOptions
@@ -448,7 +450,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(xaiMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       // xAI still uses user parameter, not metadata
@@ -470,7 +472,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(openrouterMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       expect(openrouterMock.mockProvider).toHaveBeenCalledWith(
@@ -489,7 +491,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(ollamaMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       expect(ollamaMock.mockProvider).toHaveBeenCalledWith(
@@ -508,7 +510,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(azureMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       expect(azureMock.mockProvider).toHaveBeenCalledWith(
@@ -527,7 +529,7 @@ describe("User Identification in Models", () => {
       });
 
       expect(openaiCompatibleMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "test@example.com",
       );
       expect(openaiCompatibleMock.mockProvider).toHaveBeenCalledWith(
@@ -561,7 +563,9 @@ describe("User Identification in Models", () => {
 
       // Provider should be created without user headers
       expect(openaiMock.mockCreator).toHaveBeenCalled();
-      expect(openaiMock.mockCreator.lastConfig).not.toHaveProperty("x-user-id");
+      expect(openaiMock.mockCreator.lastConfig).not.toHaveProperty(
+        "headers.x-user-id",
+      );
     });
 
     it("should handle missing user field gracefully", async () => {
@@ -593,7 +597,9 @@ describe("User Identification in Models", () => {
         "test-key",
       );
       // The x-user-id header should not exist when the field value is undefined
-      expect(openaiMock.mockCreator.lastConfig).not.toHaveProperty("x-user-id");
+      expect(openaiMock.mockCreator.lastConfig).not.toHaveProperty(
+        "headers.x-user-id",
+      );
     });
   });
 
@@ -618,7 +624,7 @@ describe("User Identification in Models", () => {
 
       // Should use the first available provider (OpenAI in our config)
       expect(openaiMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "fallback@example.com",
       );
     });
@@ -645,7 +651,7 @@ describe("User Identification in Models", () => {
 
       // Should fall back and still pass user identification
       expect(openaiMock.mockCreator.lastConfig).toHaveProperty(
-        "x-user-id",
+        "headers.x-user-id",
         "fallback@example.com",
       );
     });

@@ -265,6 +265,7 @@ OPENROUTER_API_KEY=****
 OLLAMA_BASE_URL=http://localhost:11434/api
 
 
+
 # Secret for Better Auth (generate with: npx @better-auth/cli@latest secret)
 BETTER_AUTH_SECRET=****
 
@@ -344,6 +345,10 @@ Step-by-step setup guides for running and configuring better-chatbot.
 #### [🕵🏿 Configuring AI Providers](docs/tips-guides/configuring-ai-providers.md)
 
 - Complete guide to configuring AI providers: OpenAI, Google Gemini, Anthropic Claude, Azure OpenAI, OpenAI-compatible providers (Groq, Together AI), and local Ollama instances
+
+#### [🧪 E2E Testing Guide](./docs/tips-guides/e2e-testing-guide.md)
+
+- Comprehensive end-to-end testing with Playwright including multi-user scenarios, agent visibility testing, and CI/CD integration
   <br/>
 
 ## 💡 Tips

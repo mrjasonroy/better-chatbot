@@ -9,5 +9,6 @@ export default defineConfig({
       "server-only": new URL("./mocks/server-only.js", import.meta.url)
         .pathname,
     },
+    exclude: ["**/tests/**", "**/node_modules/**"],
   },
 });

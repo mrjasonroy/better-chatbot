@@ -201,6 +201,12 @@
           "apiName": "qwen/qwen-2.5-coder-32b-instruct",
           "description": "Qwen's specialized coding model for programming tasks",
           "supportsTools": true
+        },
+        {
+          "uiName": "gemini-2.0-flash-exp:free",
+          "apiName": "google/gemini-2.0-flash-exp:free",
+          "description": "Free tier access to Gemini 2.0 Flash Exp (rate limited)",
+          "supportsTools": true
         }
       ]
     },
