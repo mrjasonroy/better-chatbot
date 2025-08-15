@@ -25,6 +25,8 @@ import {
   Sun,
   MoonStar,
   ChevronRight,
+  Shield,
+  Settings,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { appStore } from "@/app/store";
@@ -38,15 +40,14 @@ import { useCallback } from "react";
 import { GithubIcon } from "ui/github-icon";
 import { DiscordIcon } from "ui/discord-icon";
 import { useThemeStyle } from "@/hooks/use-theme-style";
-import { Session, User } from "better-auth";
+import { UserSession } from "app-types/user";
+import { getIsUserAdmin, getUserAvatar } from "lib/user/utils";
 
-export function AppSidebarUser({
-  session,
-}: { session?: { session: Session; user: User } }) {
+export function AppSidebarUser({ session }: { session: UserSession }) {
   const appStoreMutate = appStore((state) => state.mutate);
   const t = useTranslations("Layout");
 
-  const user = session?.user;
+  const user = session.user;
 
   const logout = () => {
     authClient.signOut().finally(() => {
@@ -77,16 +78,19 @@ export function AppSidebarUser({
             <SidebarMenuButton
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground bg-input/30 border"
               size={"lg"}
+              data-testid="sidebar-user-button"
             >
               <Avatar className="rounded-full size-8 border">
                 <AvatarImage
                   className="object-cover"
-                  src={user?.image || "/pf.png"}
-                  alt={user?.name || ""}
+                  src={getUserAvatar(user)}
+                  alt={user?.name || "User"}
                 />
                 <AvatarFallback>{user?.name?.slice(0, 1) || ""}</AvatarFallback>
               </Avatar>
-              <span className="truncate">{user?.email}</span>
+              <span className="truncate" data-testid="sidebar-user-email">
+                {user?.email}
+              </span>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -99,15 +103,20 @@ export function AppSidebarUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-full">
                   <AvatarImage
-                    src={user?.image || "/pf.png"}
-                    alt={user?.name || ""}
+                    src={getUserAvatar(user)}
+                    alt={user?.name || "User"}
                   />
                   <AvatarFallback className="rounded-lg">
                     {user?.name?.slice(0, 1) || ""}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user?.name}</span>
+                  <span
+                    className="truncate font-medium"
+                    data-testid="sidebar-user-name"
+                  >
+                    {user?.name}
+                  </span>
                   <span className="truncate text-xs text-muted-foreground">
                     {user?.email}
                   </span>
@@ -151,6 +160,26 @@ export function AppSidebarUser({
             >
               <DiscordIcon className="size-4 fill-foreground" />
               <span>{t("joinCommunity")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {getIsUserAdmin(session.user) && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => (window.location.href = "/admin")}
+                  className="cursor-pointer"
+                >
+                  <Shield className="size-4 text-foreground" />
+                  <span>Admin</span>
+                </DropdownMenuItem>
+              </>
+            )}
+            <DropdownMenuItem
+              onClick={() => appStoreMutate({ openUserSettings: true })}
+              className="cursor-pointer"
+              data-testid="user-settings-menu-item"
+            >
+              <Settings className="size-4 text-foreground" />
+              <span>User Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="cursor-pointer">

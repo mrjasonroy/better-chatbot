@@ -2,7 +2,7 @@ import { ChatMessage } from "app-types/chat";
 import { Agent } from "app-types/agent";
 import { UserPreferences } from "app-types/user";
 import { MCPServerConfig } from "app-types/mcp";
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -98,19 +98,28 @@ export const UserSchema = pgTable("user", {
   preferences: json("preferences").default({}).$type<UserPreferences>(),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  banned: boolean("banned"),
+  banReason: text("ban_reason"),
+  banExpires: timestamp("ban_expires"),
+  role: text("role").notNull().default("user"),
 });
+
+// Role tables removed - using Better Auth's built-in role system
+// Roles are now managed via the 'role' field on UserSchema
 
 export const SessionSchema = pgTable("session", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: uuid("user_id")
     .notNull()
     .references(() => UserSchema.id, { onDelete: "cascade" }),
+  // Admin plugin field (from better-auth generated schema)
+  impersonatedBy: text("impersonated_by"),
 });
 
 export const AccountSchema = pgTable("account", {
@@ -127,8 +136,8 @@ export const AccountSchema = pgTable("account", {
   refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
   scope: text("scope"),
   password: text("password"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const VerificationSchema = pgTable("verification", {
@@ -310,6 +319,8 @@ export type ChatMessageEntity = typeof ChatMessageSchema.$inferSelect;
 
 export type AgentEntity = typeof AgentSchema.$inferSelect;
 export type UserEntity = typeof UserSchema.$inferSelect;
+export type SessionEntity = typeof SessionSchema.$inferSelect;
+
 export type ToolCustomizationEntity =
   typeof McpToolCustomizationSchema.$inferSelect;
 export type McpServerCustomizationEntity =
@@ -318,3 +329,27 @@ export type McpServerCustomizationEntity =
 export type ArchiveEntity = typeof ArchiveSchema.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemSchema.$inferSelect;
 export type BookmarkEntity = typeof BookmarkSchema.$inferSelect;
+
+// Relation helpers for better query building
+export const userRelations = relations(UserSchema, ({ many }) => ({
+  sessions: many(SessionSchema),
+  accounts: many(AccountSchema),
+  chatThreads: many(ChatThreadSchema),
+  agents: many(AgentSchema),
+  bookmarks: many(BookmarkSchema),
+  archives: many(ArchiveSchema),
+}));
+
+export const sessionRelations = relations(SessionSchema, ({ one }) => ({
+  user: one(UserSchema, {
+    fields: [SessionSchema.userId],
+    references: [UserSchema.id],
+  }),
+}));
+
+export const accountRelations = relations(AccountSchema, ({ one }) => ({
+  user: one(UserSchema, {
+    fields: [AccountSchema.userId],
+    references: [UserSchema.id],
+  }),
+}));

@@ -47,10 +47,38 @@ const staticModels = {
     "gemma3:12b": ollama("gemma3:12b"),
   },
   openRouter: {
-    "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
-    "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
+    "qwen3-8b:free": openrouter("qwen/qwen3-8b:free", {
+      extraBody: {
+        usage: {
+          include: true,
+        },
+      },
+    }),
+    "qwen3-14b:free": openrouter("qwen/qwen3-14b:free", {
+      extraBody: {
+        usage: {
+          include: true,
+        },
+      },
+    }),
     "qwen3-coder": openrouter("qwen/qwen3-coder"),
-    "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
+    "qwen3-coder-32b:free": openrouter("qwen/qwen3-coder-32b:free", {
+      extraBody: {
+        usage: {
+          include: true,
+        },
+      },
+    }),
+    "gemini-2.0-flash-exp:free": openrouter(
+      "google/gemini-2.0-flash-exp:free",
+      {
+        extraBody: {
+          usage: {
+            include: true,
+          },
+        },
+      },
+    ),
   },
 };
 
