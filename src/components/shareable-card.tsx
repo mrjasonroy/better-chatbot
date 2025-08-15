@@ -34,6 +34,7 @@ interface ShareableCardProps {
   isVisibilityChangeLoading?: boolean;
   isBookmarkToggleLoading?: boolean;
   isDeleteLoading?: boolean;
+  actionsDisabled?: boolean;
 }
 
 export function ShareableCard({
@@ -44,6 +45,10 @@ export function ShareableCard({
   onBookmarkToggle,
   onVisibilityChange,
   onDelete,
+  isBookmarkToggleLoading,
+  isVisibilityChangeLoading,
+  isDeleteLoading,
+  actionsDisabled,
 }: ShareableCardProps) {
   const t = useTranslations();
   const isPublished = (item as WorkflowSummary).isPublished;
@@ -55,6 +60,9 @@ export function ShareableCard({
         className={cn(
           "w-full min-h-[196px] @container transition-colors group flex flex-col gap-3 cursor-pointer hover:bg-input",
         )}
+        data-testid={`${type}-card`}
+        data-item-name={item.name}
+        data-item-id={item.id}
       >
         <CardHeader className="shrink gap-y-0">
           <CardTitle className="flex gap-3 items-stretch min-w-0">
@@ -115,6 +123,10 @@ export function ShareableCard({
                     : undefined
                 }
                 onDelete={onDelete ? () => onDelete(item.id) : undefined}
+                isBookmarkToggleLoading={isBookmarkToggleLoading}
+                isVisibilityChangeLoading={isVisibilityChangeLoading}
+                isDeleteLoading={isDeleteLoading}
+                disabled={actionsDisabled}
               />
             </div>
 

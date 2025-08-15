@@ -1,5 +1,4 @@
-import { test, expect, Locator } from "@playwright/test";
-import { selectModel } from "../lifecycle/auth.setup";
+import { test, expect } from "@playwright/test";
 
 test.describe("Model Selection", () => {
   test.use({ storageState: "tests/.auth/user1.json" });

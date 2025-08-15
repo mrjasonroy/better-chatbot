@@ -7,6 +7,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -19,6 +20,7 @@ import {
 } from "ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { WriteIcon } from "ui/write-icon";
+import { useMemo } from "react";
 
 export type Visibility = "private" | "public" | "readonly";
 
@@ -69,6 +71,7 @@ interface ShareableActionsProps {
   onDelete?: () => void;
   isDeleteLoading?: boolean;
   renderActions?: () => React.ReactNode;
+  disabled?: boolean;
 }
 
 export function ShareableActions({
@@ -84,9 +87,16 @@ export function ShareableActions({
   isVisibilityChangeLoading = false,
   isBookmarkToggleLoading = false,
   isDeleteLoading = false,
+  disabled = false,
 }: ShareableActionsProps) {
   const t = useTranslations();
   const router = useRouter();
+
+  const isAnyLoading = useMemo(
+    () =>
+      isVisibilityChangeLoading || isBookmarkToggleLoading || isDeleteLoading,
+    [isVisibilityChangeLoading, isBookmarkToggleLoading, isDeleteLoading],
+  );
 
   const VisibilityIcon = visibility ? VISIBILITY_ICONS[visibility] : null;
 
@@ -117,13 +127,17 @@ export function ShareableActions({
                         size="icon"
                         className="size-8 data-[state=open]:bg-input text-muted-foreground hover:text-foreground"
                         data-testid="visibility-button"
-                        disabled={isVisibilityChangeLoading}
+                        disabled={isAnyLoading || disabled}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                         }}
                       >
-                        <VisibilityIcon className="size-4" />
+                        {isVisibilityChangeLoading ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <VisibilityIcon className="size-4" />
+                        )}
                       </Button>
                     </DropdownMenuTrigger>
                   </div>
@@ -137,7 +151,8 @@ export function ShareableActions({
                     className="cursor-pointer"
                     disabled={
                       visibility === visibilityItem.value ||
-                      isVisibilityChangeLoading
+                      isAnyLoading ||
+                      disabled
                     }
                     data-testid={`visibility-${visibilityItem.value}`}
                     onClick={() => onVisibilityChange(visibilityItem.value)}
@@ -177,14 +192,16 @@ export function ShareableActions({
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
               data-testid="bookmark-button"
-              disabled={isBookmarkToggleLoading}
+              disabled={isAnyLoading || disabled}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onBookmarkToggle(isBookmarked);
               }}
             >
-              {isBookmarked ? (
+              {isBookmarkToggleLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : isBookmarked ? (
                 <BookmarkCheck className="size-4" />
               ) : (
                 <Bookmark className="size-4" />
@@ -205,11 +222,7 @@ export function ShareableActions({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
-              disabled={
-                isVisibilityChangeLoading ||
-                isDeleteLoading ||
-                isBookmarkToggleLoading
-              }
+              disabled={isAnyLoading || disabled}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -234,14 +247,18 @@ export function ShareableActions({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
-              disabled={isDeleteLoading}
+              disabled={isAnyLoading || disabled}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onDelete();
               }}
             >
-              <Trash2 className="size-4" />
+              {isDeleteLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent>{t("Common.delete")}</TooltipContent>
