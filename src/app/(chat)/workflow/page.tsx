@@ -111,7 +111,6 @@ export default function WorkflowPage() {
 
       // Refresh the workflows data
       mutate("/api/workflow");
-      setIsVisibilityChangeLoading(false);
       toast.success(t("Workflow.visibilityUpdated"));
     } catch {
       toast.error(t("Common.error"));
@@ -135,7 +134,6 @@ export default function WorkflowPage() {
       if (!response.ok) throw new Error("Failed to delete workflow");
 
       mutate("/api/workflow");
-      setIsDeleteLoading(false);
       toast.success(t("Workflow.deleted"));
     } catch (_error) {
       toast.error(t("Common.error"));

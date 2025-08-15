@@ -176,12 +176,10 @@ export default function EditAgent({
         .ifFail(handleErrorWithToast)
         .watch(() => setIsSaving(false));
     } else {
-      console.log("saving agent", agent);
       safe(() => setIsSaving(true))
         .map(() => AgentCreateSchema.parse({ ...agent, userId }))
         .map(JSON.stringify)
         .map(async (body) => {
-          console.log("body", body);
           return fetcher(`/api/agent`, {
             method: "POST",
             body,

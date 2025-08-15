@@ -98,7 +98,7 @@ export POSTGRES_URL="postgres://user:password@localhost:5432/better_chatbot_test
 
 ### Authentication Setup
 
-Tests autehnticate 2 users by default on setup. - This is to test multi-user functionality like agent or workspace sharing.
+Tests authenticate 2 users by default on setup. - This is to test multi-user functionality like agent or workspace sharing.
 
 To test as an authenticated user (nearly all tests), you can use the `test.use({ storageState: 'tests/.auth/user1.json' });` in the test file. Without this, the test will run as an unauthenticated user. This can go in the describe block or the test block.
 
@@ -161,8 +161,6 @@ test.describe('Agent Sharing', () => {
 - **Efficient multi-user testing** - Only when needed for sharing features
 - **Clean isolation** - Each test gets fresh authentication state
 
-````
-
 ## 🔍 Best Practices
 
 ### Reliable Selectors
@@ -177,7 +175,7 @@ await page.getByTestId('agent-save-button').click();
 // ❌ Avoid - fragile and language-dependent
 await page.locator('input[placeholder="Enter agent name"]').fill('My Agent');
 await page.getByText('Save').click();
-````
+```
 
 ### Waiting Strategies
 
@@ -281,7 +279,6 @@ test.describe('Your Feature', () => {
   test('should perform action', async ({ page }) => {
     // Navigate to page
     await page.goto('/your-feature');
-    await page.waitForLoadState('networkidle');
 
     // Perform actions
     await page.getByTestId('input-field').fill('test value');

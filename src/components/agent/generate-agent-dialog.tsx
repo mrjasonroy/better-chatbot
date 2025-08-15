@@ -37,7 +37,6 @@ export function GenerateAgentDialog({
   const [generateModel, setGenerateModel] = useState<ChatModel | undefined>(
     appStore.getState().chatModel,
   );
-  console.log("generateModel", generateModel);
   const [generateAgentPrompt, setGenerateAgentPrompt] = useState("");
   const [submittedPrompt, setSubmittedPrompt] = useState("");
 
@@ -46,7 +45,6 @@ export function GenerateAgentDialog({
     schema: AgentGenerateSchema,
     onFinish(event) {
       if (event.error) {
-        console.log("event.error", event.error);
         handleErrorWithToast(event.error);
       }
       if (event.object) {
