@@ -10,7 +10,7 @@ import {
 } from "ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import { Label } from "ui/label";
-import { userRolesInfo } from "app-types/roles";
+import { UserRoleNames, userRolesInfo } from "app-types/roles";
 import { BasicUserWithLastLogin } from "app-types/user";
 import { useActionState, useState } from "react";
 import { toast } from "sonner";
@@ -23,10 +23,14 @@ export function UserRoleSelector({
   children,
   user,
   onRoleChange,
+  open,
+  onOpenChange,
 }: {
   children?: React.ReactNode;
   user: Pick<BasicUserWithLastLogin, "id" | "name" | "role">;
-  onRoleChange: (newUserRole: string) => void;
+  onRoleChange: (updatedUser: Pick<BasicUserWithLastLogin, "role">) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const [_, roleFormAction, isPending] = useActionState<
     UpdateUserRoleActionState,
@@ -34,18 +38,36 @@ export function UserRoleSelector({
   >(async (_prevState, formData) => {
     const result = await updateUserRolesAction({}, formData);
     if (result?.success && result.user) {
-      onRoleChange(result.user.role || DEFAULT_USER_ROLE);
-      setShowRoleDialog(false);
+      onRoleChange(result.user);
+      const closeDialog = () => {
+        if (onOpenChange) {
+          onOpenChange(false);
+        } else {
+          setShowRoleDialog(false);
+        }
+      };
+      closeDialog();
       toast.success(result?.message || "Role updated successfully");
     } else {
       toast.error(result?.message || "Failed to update role");
-      setShowRoleDialog(false);
+      const closeDialog = () => {
+        if (onOpenChange) {
+          onOpenChange(false);
+        } else {
+          setShowRoleDialog(false);
+        }
+      };
+      closeDialog();
     }
     return result;
   }, {});
   const [showRoleDialog, setShowRoleDialog] = useState(false);
+
+  const isOpen = open !== undefined ? open : showRoleDialog;
+  const handleOpenChange = onOpenChange || setShowRoleDialog;
+
   return (
-    <AlertDialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
+    <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
       {children && <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>}
       <AlertDialogContent>
         <Form action={roleFormAction}>
@@ -63,7 +85,7 @@ export function UserRoleSelector({
               name="role"
               defaultValue={user.role}
               onValueChange={(value) => {
-                onRoleChange(value);
+                onRoleChange({ role: value as UserRoleNames });
               }}
             >
               {Object.entries(userRolesInfo).map(([role, info]) => (
@@ -96,7 +118,7 @@ export function UserRoleSelector({
             <AlertDialogCancel
               disabled={isPending}
               type="button"
-              onClick={() => setShowRoleDialog(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Cancel
             </AlertDialogCancel>

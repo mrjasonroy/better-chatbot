@@ -15,6 +15,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:seed": "dotenv -- tsx scripts/seed-test-users.ts",
+    "test:e2e:clean": "dotenv -- tsx scripts/cleanup-all-test-data.ts",
     "lint": "next lint && biome lint --write --unsafe",
     "lint:fix": "next lint --fix && biome lint --write --unsafe",
     "format": "biome format --write",
@@ -41,9 +43,7 @@
     "docker:app": "docker build -f docker/Dockerfile -t better-chatbot . && docker run -p 3000:3000 -e NO_HTTPS=1 better-chatbot",
     "prepare": "husky",
     "playwright:install": "playwright install",
-    "check": "pnpm lint:fix && pnpm check-types && pnpm test",
-    "seed:test-users": "dotenv -- tsx scripts/seed-test-users.ts",
-    "cleanup:all-test-data": "dotenv -- tsx scripts/cleanup-all-test-data.ts"
+    "check": "pnpm lint:fix && pnpm check-types && pnpm test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",

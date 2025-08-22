@@ -16,7 +16,7 @@ import { Input } from "ui/input";
 import { buttonVariants } from "ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Search, ChevronRight, X } from "lucide-react";
-import { UserRoleNames, userRolesInfo } from "app-types/roles";
+
 import { AdminUserListItem } from "app-types/admin";
 import { cn } from "lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -25,6 +25,11 @@ import Form from "next/form";
 import Link from "next/link";
 import { SortableHeader } from "ui/sortable-header";
 import { getUserAvatar } from "lib/user/utils";
+import { useTranslations } from "next-intl";
+import { UserRoleBadges } from "@/components/user/user-detail/user-role-badges";
+import { UserStatusBadge } from "@/components/user/user-detail/user-status-badge";
+import { UserRoleSelector } from "@/components/user/user-detail/user-role-selection-dialog";
+import { useState } from "react";
 
 const DEFAULT_SORT_BY = "createdAt";
 const DEFAULT_SORT_DIRECTION = "desc";
@@ -57,6 +62,10 @@ export function UsersTable({
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previousQueryRef = useRef<string | undefined>(query);
+  const t = useTranslations("Admin.Users");
+  const [usersData, setUsersData] = useState(users);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
 
   const debouncedSetUrlQuery = useDebounce(() => {
     formRef.current?.requestSubmit();
@@ -138,6 +147,20 @@ export function UsersTable({
     });
   };
 
+  const handleUserUpdate = (updatedUser: Partial<AdminUserListItem>) => {
+    setUsersData((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === updatedUser.id ? { ...user, ...updatedUser } : user,
+      ),
+    );
+  };
+
+  const handleRoleClick = (userId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent row click
+    setSelectedUserId(userId);
+    setShowRoleDialog(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -154,7 +177,7 @@ export function UsersTable({
             <Input
               ref={inputRef}
               key={query}
-              placeholder="Search by name or email..."
+              placeholder={t("searchPlaceholder")}
               className="pl-9"
               name="query"
               defaultValue={query}
@@ -173,14 +196,14 @@ export function UsersTable({
             className={cn("shrink-0", buttonVariants({ variant: "outline" }))}
           >
             <X className="h-4 w-4 mr-1" />
-            Clear
+            {t("clear")}
           </Link>
         )}
         <div
           className="text-sm text-muted-foreground"
           data-testid="users-total-count"
         >
-          {total} user{total !== 1 ? "s" : ""} total
+          {t("totalCount", { count: total })}
         </div>
       </div>
 
@@ -190,7 +213,7 @@ export function UsersTable({
             <TableRow className="hover:bg-transparent">
               <SortableHeader
                 field="name"
-                label="User"
+                label={t("user")}
                 currentSortBy={sortBy}
                 currentSortDirection={sortDirection}
                 onSort={handleSort}
@@ -198,18 +221,18 @@ export function UsersTable({
               />
               <SortableHeader
                 field="role"
-                label="Role"
+                label={t("role")}
                 currentSortBy={sortBy}
                 currentSortDirection={sortDirection}
                 onSort={handleSort}
                 data-testid="sort-header-role"
               />
               <TableHead className="font-semibold" data-testid="header-status">
-                Status
+                {t("status")}
               </TableHead>
               <SortableHeader
                 field="createdAt"
-                label="Joined"
+                label={t("joined")}
                 currentSortBy={sortBy}
                 currentSortDirection={sortDirection}
                 onSort={handleSort}
@@ -225,11 +248,11 @@ export function UsersTable({
                   colSpan={5}
                   className="text-center py-8 text-muted-foreground"
                 >
-                  No users found
+                  {t("noUsersFound")}
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
+              usersData.map((user) => (
                 <TableRow
                   key={user.id}
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -253,7 +276,7 @@ export function UsersTable({
                               className="text-xs"
                               data-testid="current-user-badge"
                             >
-                              You
+                              {t("youBadge")}
                             </Badge>
                           )}
                         </div>
@@ -264,35 +287,23 @@ export function UsersTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {user.role?.split(",").map((role) => (
-                        <Badge
-                          key={role}
-                          variant="secondary"
-                          className="text-xs"
-                          data-testid={`role-badge-${role.toLowerCase()}`}
-                        >
-                          {userRolesInfo[role as UserRoleNames]?.label || role}
-                        </Badge>
-                      ))}
+                    <div onClick={(e) => handleRoleClick(user.id, e)}>
+                      <UserRoleBadges
+                        user={{ ...user, lastLogin: user.lastLogin || null }}
+                        showBanned={false}
+                        onRoleClick={() => {}} // Handled by div click
+                        disabled={user.id === currentUserId}
+                        className="mt-0"
+                      />
                     </div>
                   </TableCell>
                   <TableCell>
-                    {user.banned ? (
-                      <Badge
-                        variant="destructive"
-                        data-testid="status-badge-banned"
-                      >
-                        Banned
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        data-testid="status-badge-active"
-                      >
-                        Active
-                      </Badge>
-                    )}
+                    <UserStatusBadge
+                      user={{ ...user, lastLogin: user.lastLogin || null }}
+                      onStatusChange={handleUserUpdate}
+                      currentUserId={currentUserId}
+                      showClickable={false}
+                    />
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {format(new Date(user.createdAt), "MMM d, yyyy")}
@@ -315,6 +326,18 @@ export function UsersTable({
         totalPages={totalPages}
         buildUrl={buildUrl}
       />
+
+      {selectedUserId && (
+        <UserRoleSelector
+          user={usersData.find((u) => u.id === selectedUserId)!}
+          onRoleChange={handleUserUpdate}
+          open={showRoleDialog}
+          onOpenChange={(open) => {
+            setShowRoleDialog(open);
+            if (!open) setSelectedUserId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

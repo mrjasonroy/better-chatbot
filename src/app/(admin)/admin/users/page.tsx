@@ -16,6 +16,7 @@ import { notFound } from "next/navigation";
 import { UserSession } from "app-types/user";
 import { getAdminUsers } from "lib/admin/server";
 import { AdminHeader } from "@/components/admin/admin-header";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   searchParams: Promise<{
@@ -36,6 +37,8 @@ export default async function UserListPage({ searchParams }: PageProps) {
   } catch {
     notFound();
   }
+
+  const t = await getTranslations("Admin.Users");
 
   const params = await searchParams;
   const page = parseInt(params.page ?? "1", 10);
@@ -62,17 +65,17 @@ export default async function UserListPage({ searchParams }: PageProps) {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold">Users</h1>
+                <h1 className="text-2xl font-bold">{t("title")}</h1>
                 <p className="text-muted-foreground">
-                  Manage user accounts and permissions
+                  {t("viewAndManageUsers")}
                 </p>
               </div>
             </div>
 
             <Card>
               <CardHeader>
-                <CardTitle>All Users</CardTitle>
-                <CardDescription>View and manage user accounts</CardDescription>
+                <CardTitle>{t("allUsers")}</CardTitle>
+                <CardDescription>{t("viewAndManageUsers")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <UsersTable

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { Label } from "ui/label";
 import { Input } from "ui/input";
 import { Button } from "ui/button";
-import { Badge } from "ui/badge";
+
 import { FormGroup } from "ui/form-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { toast } from "sonner";
@@ -13,12 +13,14 @@ import { updateUserDetailsAction } from "@/app/api/user/actions";
 import { UpdateUserActionState } from "@/app/api/user/validations";
 import { BasicUserWithLastLogin } from "app-types/user";
 import { UserRoleSelector } from "./user-role-selection-dialog";
-
 import { UserRoleBadges } from "./user-role-badges";
 import Form from "next/form";
 import { UpdateUserPasswordDialog } from "./user-update-password-dialog";
 import { SubmitButton } from "./user-submit-button";
 import { LockIcon } from "lucide-react";
+import { useProfileTranslations } from "@/hooks/use-profile-translations";
+import { UserStatusBadge } from "./user-status-badge";
+import { useState } from "react";
 
 interface UserDetailFormProps {
   user: BasicUserWithLastLogin;
@@ -27,7 +29,7 @@ interface UserDetailFormProps {
     oauthProviders: string[];
   };
   currentUserId: string;
-  onUserDetailsUpdate: (user: BasicUserWithLastLogin) => void;
+  onUserDetailsUpdate: (user: Partial<BasicUserWithLastLogin>) => void;
   view?: "admin" | "user";
 }
 
@@ -38,19 +40,28 @@ export function UserDetailForm({
   view,
   onUserDetailsUpdate,
 }: UserDetailFormProps) {
+  const { t, tCommon } = useProfileTranslations(view);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+
   const [, detailsUpdateFormAction, isPending] = useActionState<
     UpdateUserActionState,
     FormData
   >(async (prevState, formData) => {
     const result = await updateUserDetailsAction(prevState, formData);
     if (result?.success && result.user) {
-      onUserDetailsUpdate(result.user);
-      toast.success("User details updated successfully");
+      const updatedUser = result.user;
+      onUserDetailsUpdate(updatedUser);
+      toast.success(t("updateSuccess"));
     } else {
-      toast.error(result?.message || "Failed to update user details");
+      toast.error(result?.message || t("updateError"));
     }
     return result;
   }, {});
+
+  const handleUserUpdate = (updatedUser: Partial<BasicUserWithLastLogin>) => {
+    console.log("handleUserUpdate", updatedUser);
+    onUserDetailsUpdate(updatedUser);
+  };
 
   return (
     <>
@@ -58,9 +69,9 @@ export function UserDetailForm({
         <div className="space-y-6 pb-6">
           <div className="max-w-2xl mx-auto">
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">User Information</h3>
+              <h3 className="text-lg font-semibold">{t("sectionTitle")}</h3>
               <p className="text-sm text-muted-foreground">
-                Update user details and manage their account
+                {t("sectionDescription")}
               </p>
             </div>
 
@@ -74,7 +85,7 @@ export function UserDetailForm({
               <FormGroup>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">{tCommon("name")}</Label>
                     <Input
                       id="name"
                       name="name"
@@ -86,7 +97,7 @@ export function UserDetailForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{tCommon("email")}</Label>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span
@@ -112,7 +123,7 @@ export function UserDetailForm({
                       </TooltipTrigger>
                       {!!userAccountInfo?.oauthProviders?.length && (
                         <TooltipContent>
-                          Email cannot be modified for SSO users
+                          {t("emailCannotBeModifiedSSO")}
                         </TooltipContent>
                       )}
                     </Tooltip>
@@ -124,75 +135,36 @@ export function UserDetailForm({
                 <div className="grid gap-4 sm:grid-cols-2">
                   {/* Roles Section */}
                   <div className="space-y-2 sm:border-r sm:border-border sm:pr-4">
-                    <Label>Roles</Label>
-                    <div className="flex items-start gap-2">
-                      <div className="flex flex-wrap gap-2 flex-1">
-                        <UserRoleBadges
-                          user={user}
-                          showBanned={false}
-                          view={view}
-                        />
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span
-                            className={
-                              user.id === currentUserId
-                                ? "cursor-not-allowed"
-                                : ""
-                            }
-                          >
-                            <UserRoleSelector
-                              user={user}
-                              onRoleChange={(newRole) => {
-                                onUserDetailsUpdate({
-                                  ...user,
-                                  role: newRole,
-                                });
-                              }}
-                            >
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                disabled={
-                                  user.id === currentUserId || isPending
-                                }
-                                data-testid="change-role-button"
-                              >
-                                Change Role
-                              </Button>
-                            </UserRoleSelector>
-                          </span>
-                        </TooltipTrigger>
-                        {user.id === currentUserId && (
-                          <TooltipContent>
-                            You cannot modify your own role
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </div>
+                    <Label>{t("roles")}</Label>
+                    <UserRoleBadges
+                      user={user}
+                      showBanned={false}
+                      view={view}
+                      onRoleClick={
+                        user.id !== currentUserId
+                          ? () => setShowRoleDialog(true)
+                          : undefined
+                      }
+                      disabled={user.id === currentUserId || isPending}
+                      className="mt-0"
+                    />
+                    {user.id === currentUserId && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t("cannotModifyOwnRole")}
+                      </p>
+                    )}
                   </div>
 
                   {/* Account Status Section */}
                   <div className="space-y-2 sm:pl-4">
-                    <Label>Account Status</Label>
-                    <div>
-                      {user.banned ? (
-                        <Badge
-                          variant="destructive"
-                          data-testid="status-badge-banned"
-                        >
-                          Banned
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          data-testid="status-badge-active"
-                        >
-                          Active
-                        </Badge>
-                      )}
-                    </div>
+                    <Label>{t("accountStatus")}</Label>
+                    <UserStatusBadge
+                      user={user}
+                      onStatusChange={handleUserUpdate}
+                      currentUserId={currentUserId}
+                      disabled={isPending}
+                      showClickable={view === "admin"}
+                    />
                   </div>
                 </div>
               </FormGroup>
@@ -200,7 +172,7 @@ export function UserDetailForm({
               <FormGroup>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Joined</Label>
+                    <Label>{tCommon("joined")}</Label>
                     <p
                       className="text-sm text-muted-foreground"
                       data-testid="user-created-at"
@@ -210,7 +182,7 @@ export function UserDetailForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Last Updated</Label>
+                    <Label>{tCommon("lastUpdated")}</Label>
                     <p
                       className="text-sm text-muted-foreground"
                       data-testid="user-updated-at"
@@ -226,7 +198,7 @@ export function UserDetailForm({
       </div>
 
       <div className="flex-shrink-0 bg-background border-t border-border p-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+        <div className="max-w-2xl mx-auto flex items-center justify-end gap-2">
           <UpdateUserPasswordDialog userId={user.id}>
             <Button
               variant="secondary"
@@ -235,15 +207,22 @@ export function UserDetailForm({
               data-testid="update-password-button"
             >
               <LockIcon className="w-4 h-4" />
-              Update Password
+              {t("updatePassword")}
             </Button>
           </UpdateUserPasswordDialog>
 
           <SubmitButton data-testid="save-changes-button">
-            Save Changes
+            {t("saveChanges")}
           </SubmitButton>
         </div>
       </div>
+
+      <UserRoleSelector
+        user={user}
+        onRoleChange={handleUserUpdate}
+        open={showRoleDialog}
+        onOpenChange={setShowRoleDialog}
+      />
     </>
   );
 }

@@ -17,12 +17,13 @@ export function UserDetailCard({
   currentUserId: string;
   view?: "admin" | "user";
 }) {
+  console.log("UserDetailCard", user);
   return (
     <Card data-testid="user-detail-card">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
+            <Avatar className="h-16 w-16 rounded-full">
               <AvatarImage src={getUserAvatar(user)} />
               <AvatarFallback>
                 {user.name.slice(0, 2).toUpperCase()}

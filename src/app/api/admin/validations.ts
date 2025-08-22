@@ -11,6 +11,16 @@ export const UpdateUserRoleSchema = z.object({
     .optional(),
 });
 
+export const UpdateUserBanStatusSchema = z.object({
+  userId: z.string().uuid("Invalid user ID"),
+  banned: z.enum(["true", "false"]).transform((value) => value === "true"),
+  banReason: z.string().optional(),
+});
+
 export type UpdateUserRoleActionState = ActionState & {
+  user?: BasicUserWithLastLogin | null;
+};
+
+export type UpdateUserBanStatusActionState = ActionState & {
   user?: BasicUserWithLastLogin | null;
 };

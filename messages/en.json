@@ -236,7 +236,8 @@
       "defaultToolKit": {
         "visualization": "Data Visualization",
         "webSearch": "Search the Web",
-        "http": "HTTP Request"
+        "http": "HTTP Request",
+        "code": "Code Execution"
       }
     },
     "VoiceChat": {
@@ -430,6 +431,74 @@
     "deleteThread": "Delete Chat",
     "openShortcutsPopup": "Open Shortcuts Popup",
     "toggleVoiceChat": "Toggle Voice Chat"
+  },
+  "User": {
+    "Profile": {
+      "admin": {
+        "pageTitle": "User Management",
+        "pageDescription": "Manage user accounts and permissions",
+        "sectionTitle": "User Information",
+        "sectionDescription": "Update user details and manage their account",
+        "roles": "Roles",
+        "changeRole": "Change Role",
+        "accountStatus": "Account Status",
+        "updatePassword": "Reset Password",
+        "saveChanges": "Save Changes",
+        "deleteUser": "Delete User",
+        "deleteUserDescription": "Permanently delete this user and all associated data",
+        "dangerZoneDescription": "Irreversible actions for this user account",
+        "updateSuccess": "User details updated successfully",
+        "updateError": "Failed to update user details",
+        "cannotModifyOwnRole": "You cannot modify your own role",
+        "emailCannotBeModifiedSSO": "Email cannot be modified for SSO users"
+      },
+      "user": {
+        "pageTitle": "My Profile",
+        "pageDescription": "Manage your account settings",
+        "sectionTitle": "Profile Information",
+        "sectionDescription": "Update your personal information",
+        "roles": "My Roles",
+        "changeRole": "Request Role Change",
+        "accountStatus": "My Account Status",
+        "updatePassword": "Change Password",
+        "saveChanges": "Save Profile",
+        "deleteUser": "Delete My Account",
+        "deleteUserDescription": "Permanently delete your account and all associated data",
+        "dangerZoneDescription": "Permanent actions for your account",
+        "updateSuccess": "Your profile has been updated",
+        "updateError": "Failed to update your profile",
+        "cannotModifyOwnRole": "Contact an admin to change your role",
+        "emailCannotBeModifiedSSO": "Your email is managed by your SSO provider"
+      },
+      "common": {
+        "details": "Details",
+        "statistics": "Statistics",
+        "dangerZone": "Danger Zone",
+        "joined": "Joined",
+        "lastUpdated": "Last Updated",
+        "active": "Active",
+        "banned": "Banned",
+        "name": "Name",
+        "email": "Email",
+        "required": "Required"
+      }
+    }
+  },
+  "Admin": {
+    "Users": {
+      "title": "Users",
+      "allUsers": "All Users",
+      "viewAndManageUsers": "View and manage user accounts",
+      "searchPlaceholder": "Search by name or email...",
+      "clear": "Clear",
+      "noUsersFound": "No users found",
+      "youBadge": "You",
+      "totalCount": "{count} user{count, plural, =1 {} other {s}} total",
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "joined": "Joined"
+    }
   },
   "MCP": {
     "marketplace": "Marketplace",

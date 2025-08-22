@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,6 +14,7 @@ import { BasicUserWithLastLogin } from "app-types/user";
 import { UserDeleteDialog } from "./user-delete-dialog";
 import { UserDetailCard } from "./user-detail-card";
 import { UserDetailForm } from "./user-detail-form";
+import { useProfileTranslations } from "@/hooks/use-profile-translations";
 
 interface UserDetailFormProps {
   user: BasicUserWithLastLogin;
@@ -35,11 +36,15 @@ export function UserDetail({
   statsSlot,
 }: UserDetailFormProps) {
   const [user, setUser] = useState(initialUser);
+  const { t, tCommon } = useProfileTranslations(view);
 
   return (
-    <div className="flex flex-col h-full" data-testid="user-detail-content">
+    <div
+      className="flex flex-col h-full gap-4"
+      data-testid="user-detail-content"
+    >
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 space-y-6">
+      <div className="flex-shrink-0">
         <UserDetailCard user={user} currentUserId={currentUserId} view={view} />
       </div>
 
@@ -56,21 +61,21 @@ export function UserDetail({
             className="bg-transparent border-0 border-b-2 border-transparent rounded-none px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none data-[state=active]:shadow-none"
             data-testid="details-tab"
           >
-            Details
+            {tCommon("details")}
           </TabsTrigger>
           <TabsTrigger
             value="stats"
             className="bg-transparent border-0 border-b-2 border-transparent rounded-none px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none data-[state=active]:shadow-none"
             data-testid="stats-tab"
           >
-            Statistics
+            {tCommon("statistics")}
           </TabsTrigger>
           <TabsTrigger
             value="danger"
             className="bg-transparent border-0 border-b-2 border-transparent rounded-none px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent shadow-none data-[state=active]:shadow-none"
             data-testid="danger-tab"
           >
-            Danger Zone
+            {tCommon("dangerZone")}
           </TabsTrigger>
         </TabsList>
 
@@ -85,7 +90,10 @@ export function UserDetail({
               user={user}
               currentUserId={currentUserId}
               userAccountInfo={userAccountInfo}
-              onUserDetailsUpdate={setUser}
+              onUserDetailsUpdate={(updatedUser) => {
+                console.log("onUserDetailsUpdate", updatedUser);
+                setUser((prev) => ({ ...prev, ...updatedUser }));
+              }}
               view={view}
             />
           </TabsContent>
@@ -102,19 +110,19 @@ export function UserDetail({
                 <Card className="border-destructive">
                   <CardHeader>
                     <CardTitle className="text-destructive">
-                      Danger Zone
+                      {tCommon("dangerZone")}
                     </CardTitle>
                     <CardDescription>
-                      Irreversible actions for this user account
+                      {t("dangerZoneDescription")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="rounded-lg border border-destructive/50 p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">Delete User</p>
+                          <p className="font-medium">{t("deleteUser")}</p>
                           <p className="text-sm text-muted-foreground">
-                            Permanently delete this user and all associated data
+                            {t("deleteUserDescription")}
                           </p>
                         </div>
                         <UserDeleteDialog user={user} view={view}>
@@ -122,7 +130,7 @@ export function UserDetail({
                             variant="destructive"
                             data-testid="delete-user-button"
                           >
-                            Delete User
+                            {t("deleteUser")}
                           </Button>
                         </UserDeleteDialog>
                       </div>
