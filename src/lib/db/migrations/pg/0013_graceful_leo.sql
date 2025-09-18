@@ -1,8 +1,20 @@
-ALTER TABLE "agent" DROP CONSTRAINT "agent_user_id_user_id_fk";
+DO $$ BEGIN
+  ALTER TABLE "agent" DROP CONSTRAINT "agent_user_id_user_id_fk";
+EXCEPTION
+  WHEN undefined_object THEN null;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "chat_message" DROP CONSTRAINT "chat_message_thread_id_chat_thread_id_fk";
+DO $$ BEGIN
+  ALTER TABLE "chat_message" DROP CONSTRAINT "chat_message_thread_id_chat_thread_id_fk";
+EXCEPTION
+  WHEN undefined_object THEN null;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "chat_thread" DROP CONSTRAINT "chat_thread_user_id_user_id_fk";
+DO $$ BEGIN
+  ALTER TABLE "chat_thread" DROP CONSTRAINT "chat_thread_user_id_user_id_fk";
+EXCEPTION
+  WHEN undefined_object THEN null;
+END $$;
 --> statement-breakpoint
 ALTER TABLE "account" ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;--> statement-breakpoint
 ALTER TABLE "account" ALTER COLUMN "updated_at" SET DEFAULT CURRENT_TIMESTAMP;--> statement-breakpoint
