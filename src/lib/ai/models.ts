@@ -6,6 +6,7 @@ import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
 import { xai } from "@ai-sdk/xai";
 import { openrouter } from "@openrouter/ai-sdk-provider";
+import { createGroq } from "@ai-sdk/groq";
 import { LanguageModel } from "ai";
 import {
   createOpenAICompatibleModels,
@@ -15,6 +16,10 @@ import { ChatModel } from "app-types/chat";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
+});
+const groq = createGroq({
+  baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 const staticModels = {
@@ -46,6 +51,13 @@ const staticModels = {
     "gemma3:1b": ollama("gemma3:1b"),
     "gemma3:4b": ollama("gemma3:4b"),
     "gemma3:12b": ollama("gemma3:12b"),
+  },
+  groq: {
+    "kimi-k2-instruct": groq("moonshotai/kimi-k2-instruct"),
+    "llama-4-scout-17b": groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+    "gpt-oss-20b": groq("openai/gpt-oss-20b"),
+    "gpt-oss-120b": groq("openai/gpt-oss-120b"),
+    "qwen3-32b": groq("qwen/qwen3-32b"),
   },
   openRouter: {
     "gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
@@ -99,9 +111,40 @@ export const customModelProvider = {
       name,
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
     })),
+    hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),
   getModel: (model?: ChatModel): LanguageModel => {
     if (!model) return fallbackModel;
     return allModels[model.provider]?.[model.model] || fallbackModel;
   },
 };
+
+function checkProviderAPIKey(provider: keyof typeof staticModels) {
+  let key: string | undefined;
+  switch (provider) {
+    case "openai":
+      key = process.env.OPENAI_API_KEY;
+      break;
+    case "google":
+      key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+      break;
+    case "anthropic":
+      key = process.env.ANTHROPIC_API_KEY;
+      break;
+    case "xai":
+      key = process.env.XAI_API_KEY;
+      break;
+    case "ollama":
+      key = process.env.OLLAMA_API_KEY;
+      break;
+    case "groq":
+      key = process.env.GROQ_API_KEY;
+      break;
+    case "openRouter":
+      key = process.env.OPENROUTER_API_KEY;
+      break;
+    default:
+      return true; // assume the provider has an API key
+  }
+  return !!key && key != "****";
+}
