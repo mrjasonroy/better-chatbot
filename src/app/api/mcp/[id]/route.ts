@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeMcpClientAction } from "../actions";
-import { pgMcpRepository } from "../../../../lib/db/pg/repositories/mcp-repository.pg";
+import { removeMcpClientAction } from "@/app/api/mcp/actions";
+import { pgMcpRepository } from "lib/db/pg/repositories/mcp-repository.pg";
 import { getSession } from "auth/server";
+import { canManageMCPServer } from "lib/auth/permissions";
 
 export async function DELETE(
   _request: NextRequest,
@@ -21,8 +22,12 @@ export async function DELETE(
         { status: 404 },
       );
     }
-    if (mcpServer.userId !== session?.user.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const canManage = await canManageMCPServer(
+      mcpServer.userId,
+      mcpServer.visibility,
+    );
+    if (!canManage) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
     await pgMcpRepository.deleteById(params.id);
     await removeMcpClientAction(params.id);

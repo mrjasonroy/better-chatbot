@@ -17,8 +17,8 @@ if (process.env.CI) {
   config();
 }
 
-import { auth } from "../src/lib/auth/auth-instance";
-import { USER_ROLES } from "../src/types/roles";
+import { auth } from "auth/auth-instance";
+import { USER_ROLES } from "app-types/roles";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -26,7 +26,7 @@ import {
   UserSchema,
   ChatMessageSchema,
   ChatThreadSchema,
-} from "../src/lib/db/pg/schema.pg";
+} from "lib/db/pg/schema.pg";
 import { like, eq } from "drizzle-orm";
 
 // Create database connection with Pool
@@ -324,15 +324,15 @@ async function seedTestUsers() {
     console.log("\n🔑 Test Credentials:");
     console.log("  Admin: admin@test-seed.local / AdminPassword123!");
     console.log("  Editor: editor@test-seed.local / EditorPassword123!");
+    console.log("  Editor2: editor2@test-seed.local / Editor2Password123!");
     console.log("  Regular: user@test-seed.local / UserPassword123!");
     console.log("  Others: testuser{4-21}@test-seed.local / TestPass{n}!");
 
     console.log("\n📁 Auth Files Will Be Created:");
     console.log("  - tests/.auth/admin.json (admin user)");
     console.log("  - tests/.auth/editor-user.json (editor user)");
+    console.log("  - tests/.auth/editor-user2.json (editor2 user)");
     console.log("  - tests/.auth/regular-user.json (regular user)");
-    console.log("  - tests/.auth/user1.json (backward compatibility - admin)");
-    console.log("  - tests/.auth/user2.json (backward compatibility - editor)");
   } catch (error) {
     console.error("❌ Error seeding test users:", error);
     throw error;

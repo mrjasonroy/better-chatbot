@@ -4,6 +4,7 @@ import {
   openDropdown,
   selectDropdownOption,
 } from "../utils/test-helpers";
+import { TEST_USERS } from "../constants/test-users";
 
 // Test names to ensure uniqueness across test runs
 const testSuffix =
@@ -20,7 +21,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
     async ({ browser }) => {
       // Use admin to set up test agents with different visibility levels
       const adminContext = await browser.newContext({
-        storageState: "tests/.auth/admin.json",
+        storageState: TEST_USERS.admin.authFile,
       });
       const adminPage = await adminContext.newPage();
 
@@ -110,7 +111,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: "tests/.auth/editor-user.json",
+      storageState: TEST_USERS.editor.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
@@ -143,7 +144,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   test("different user can edit public agent", async ({ browser }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: "tests/.auth/editor-user.json",
+      storageState: TEST_USERS.editor.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
@@ -198,7 +199,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: "tests/.auth/editor-user.json",
+      storageState: TEST_USERS.editor.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
@@ -240,7 +241,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: "tests/.auth/editor-user.json",
+      storageState: TEST_USERS.editor.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
