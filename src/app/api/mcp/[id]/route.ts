@@ -3,6 +3,7 @@ import { removeMcpClientAction } from "@/app/api/mcp/actions";
 import { pgMcpRepository } from "lib/db/pg/repositories/mcp-repository.pg";
 import { getSession } from "auth/server";
 import { canManageMCPServer } from "lib/auth/permissions";
+import logger from "lib/logger";
 
 export async function DELETE(
   _request: NextRequest,
@@ -29,11 +30,12 @@ export async function DELETE(
     if (!canManage) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
-    await pgMcpRepository.deleteById(params.id);
+
     await removeMcpClientAction(params.id);
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to delete MCP server:", error);
+    logger.error("Failed to delete MCP server:", error);
     return NextResponse.json(
       {
         error:

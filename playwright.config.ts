@@ -15,9 +15,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 4 : 3,
-  maxFailures: 5,
+  // Removed maxFailures - let tests run to completion and fail properly
   reporter: process.env.CI
-    ? [["html", { open: "never" }], ["list"]]
+    ? [
+        ["html", { open: "never", outputFolder: "playwright-report" }],
+        ["list"],
+        ["json", { outputFile: "test-results/.last-run.json" }],
+      ]
     : [["html"], ["list"]],
   use: {
     baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",

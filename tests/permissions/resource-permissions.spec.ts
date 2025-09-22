@@ -25,28 +25,61 @@ test.describe("Resource Permissions - Regular User", () => {
 
   test("should be able to view agents but not edit/delete", async ({
     page,
+    browser,
   }) => {
+    // First, create an agent as an editor to ensure we have something to test
+    const editorContext = await browser.newContext({
+      storageState: TEST_USERS.editor.authFile,
+    });
+    const editorPage = await editorContext.newPage();
+
+    // Create a test agent with unique name
+    const testAgentName = `Test Agent ${Date.now()}`;
+    await editorPage.goto("/agent/new");
+    await editorPage.getByTestId("agent-name-input").fill(testAgentName);
+    await editorPage
+      .getByTestId("agent-description-input")
+      .fill("Test agent for permissions");
+
+    // Save first, then edit to change visibility
+    await editorPage.getByTestId("agent-save-button").click();
+    await editorPage.waitForURL("**/agents");
+
+    // Navigate back to the agent to set visibility
+    await editorPage
+      .locator(`main a:has-text("${testAgentName}")`)
+      .first()
+      .click();
+    await editorPage.waitForURL(/\/agent\/[^\/]+$/);
+
+    // Set visibility to public so regular user can see it
+    await editorPage.getByTestId("visibility-button").click();
+    await editorPage.getByTestId("visibility-public").click();
+
+    await editorPage.getByTestId("agent-save-button").click();
+    await editorPage.waitForURL("**/agents");
+    await editorContext.close();
+
+    // Now test as regular user
     await page.goto("/agents");
+    await page.waitForLoadState("networkidle");
 
-    // Navigate to an agent (if exists)
-    const agentCards = page.getByTestId("shareable-card");
-    const count = await agentCards.count();
+    // Find and click on the test agent we just created - use the link directly
+    const agentLink = page
+      .locator(`main a:has-text("${testAgentName}")`)
+      .first();
 
-    if (count > 0) {
-      // Click on first agent
-      await agentCards.first().click();
+    await expect(agentLink).toBeVisible({ timeout: 10000 });
+    await agentLink.click();
 
-      // Should be able to view the agent
-      await expect(page).toHaveURL(/\/agent\//);
+    // Should be able to view the agent
+    await expect(page).toHaveURL(/\/agent\//);
 
-      // Should NOT see edit/delete buttons
-      await expect(
-        page.getByRole("button", { name: /edit/i }),
-      ).not.toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /delete/i }),
-      ).not.toBeVisible();
-    }
+    // Should NOT see edit/delete buttons for regular user
+    await expect(page.getByRole("button", { name: /save/i })).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /delete/i }),
+    ).not.toBeVisible();
   });
 
   test("should NOT see create workflow options", async ({ page }) => {

@@ -3,6 +3,7 @@ import { McpServerSchema } from "lib/db/pg/schema.pg";
 import { NextResponse } from "next/server";
 import { saveMcpClientAction } from "./actions";
 import { canCreateMCP } from "lib/auth/permissions";
+import { logger } from "better-auth";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, id: result.client.getInfo().id });
   } catch (error: any) {
+    logger.error("Failed to save MCP client", { error });
     return NextResponse.json(
       { message: error.message || "Failed to save MCP client" },
       { status: 500 },
