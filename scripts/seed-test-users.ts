@@ -270,7 +270,16 @@ async function seedTestUsers() {
     });
     console.log("✅ Created editor user:", editorUser?.id);
 
-    // 3. Regular User
+    // 3. Editor2 User
+    const editor2User = await createUserWithBetterAuth({
+      email: "editor2@test-seed.local",
+      password: "Editor2Password123!",
+      name: "Test Editor User 2",
+      role: USER_ROLES.EDITOR,
+    });
+    console.log("✅ Created editor2 user:", editor2User?.id);
+
+    // 4. Regular User
     const regularUser = await createUserWithBetterAuth({
       email: "user@test-seed.local",
       password: "UserPassword123!",
@@ -279,9 +288,9 @@ async function seedTestUsers() {
     });
     console.log("✅ Created regular user:", regularUser?.id);
 
-    // 4. Create additional test users
+    // 5. Create additional test users
     console.log("👥 Creating additional test users...");
-    let createdCount = 3;
+    let createdCount = 4;
 
     for (let i = 4; i <= 21; i++) {
       try {
@@ -304,11 +313,12 @@ async function seedTestUsers() {
       }
     }
 
-    // 5. Seed some basic message/model data for stats testing
+    // 6. Seed some basic message/model data for stats testing
     console.log("📊 Creating sample AI usage data for stats testing...");
     const userIdsForSampleData = [
       adminUser?.id,
       editorUser?.id,
+      editor2User?.id,
       regularUser?.id,
     ].filter(Boolean) as string[];
     if (userIdsForSampleData.length > 0) {
