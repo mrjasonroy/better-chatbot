@@ -499,4 +499,119 @@ test.describe("MCP API Permissions", () => {
 
     await userContext.close();
   });
+
+  test("admin can delete any user's MCP server", async ({ browser }) => {
+    // Step 1: Editor creates a private MCP server
+    const editorContext = await browser.newContext({
+      storageState: TEST_USERS.editor.authFile,
+    });
+    const editorPage = await editorContext.newPage();
+
+    const serverName = generateServerName("editor-for-admin-delete");
+    const { id: editorServerId } = await createMcpServer(
+      { page: editorPage },
+      { name: serverName, visibility: "private" },
+    );
+
+    // Step 2: Verify editor can see their server
+    await editorPage.goto("/mcp", { waitUntil: "networkidle" });
+    await expect(editorPage.getByText(serverName)).toBeVisible();
+
+    // Step 3: Admin deletes editor's server via API
+    const adminContext = await browser.newContext({
+      storageState: TEST_USERS.admin.authFile,
+    });
+    const adminPage = await adminContext.newPage();
+
+    const deleteResponse = await adminPage.request.delete(
+      `/api/mcp/${editorServerId}`,
+    );
+    expect(deleteResponse.ok()).toBeTruthy();
+
+    // Step 4: Verify server is deleted - editor can no longer see it
+    await editorPage.reload({ waitUntil: "networkidle" });
+    await expect(editorPage.getByText(serverName)).not.toBeVisible();
+
+    // Step 5: Verify via API that server is gone
+    const servers = await getMcpServers(editorPage);
+    const hasDeletedServer = servers.some((s: any) => s.id === editorServerId);
+    expect(hasDeletedServer).toBeFalsy();
+
+    await editorContext.close();
+    await adminContext.close();
+  });
+
+  test("editor cannot delete admin's MCP server", async ({ browser }) => {
+    // Step 1: Admin creates a private MCP server
+    const adminContext = await browser.newContext({
+      storageState: TEST_USERS.admin.authFile,
+    });
+    const adminPage = await adminContext.newPage();
+
+    const serverName = generateServerName("admin-protected");
+    const { id: adminServerId } = await createMcpServer(
+      { page: adminPage },
+      { name: serverName, visibility: "private" },
+    );
+
+    // Step 2: Editor tries to delete admin's server via API
+    const editorContext = await browser.newContext({
+      storageState: TEST_USERS.editor.authFile,
+    });
+    const editorPage = await editorContext.newPage();
+
+    const deleteResponse = await editorPage.request.delete(
+      `/api/mcp/${adminServerId}`,
+      {
+        failOnStatusCode: false,
+      },
+    );
+    expect(deleteResponse.status()).toBe(403);
+
+    // Step 3: Verify server still exists
+    await adminPage.goto("/mcp", { waitUntil: "networkidle" });
+    await expect(adminPage.getByText(serverName)).toBeVisible();
+
+    // Cleanup
+    await deleteMcpServer({ page: adminPage }, adminServerId);
+    await adminContext.close();
+    await editorContext.close();
+  });
+
+  test("regular user cannot delete any MCP server", async ({ browser }) => {
+    // Step 1: Editor creates a private MCP server
+    const editorContext = await browser.newContext({
+      storageState: TEST_USERS.editor.authFile,
+    });
+    const editorPage = await editorContext.newPage();
+
+    const serverName = generateServerName("editor-protected");
+    const { id: editorServerId } = await createMcpServer(
+      { page: editorPage },
+      { name: serverName, visibility: "private" },
+    );
+
+    // Step 2: Regular user tries to delete editor's server via API
+    const userContext = await browser.newContext({
+      storageState: TEST_USERS.regular.authFile,
+    });
+    const userPage = await userContext.newPage();
+
+    const deleteResponse = await userPage.request.delete(
+      `/api/mcp/${editorServerId}`,
+      {
+        failOnStatusCode: false,
+      },
+    );
+    expect(deleteResponse.status()).toBe(403);
+
+    // Step 3: Verify server still exists
+    await editorPage.goto("/mcp", { waitUntil: "networkidle" });
+    await expect(editorPage.getByText(serverName)).toBeVisible();
+
+    // Cleanup
+    await deleteMcpServer({ page: editorPage }, editorServerId);
+    await editorContext.close();
+    await userContext.close();
+  });
 });

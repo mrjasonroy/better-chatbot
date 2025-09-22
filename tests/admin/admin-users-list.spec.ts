@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { TEST_USERS } from "../constants/test-users";
 
 // Use admin auth state for all tests in this file
-test.use({ storageState: "tests/.auth/admin.json" });
+test.use({ storageState: TEST_USERS.admin.authFile });
 
 test.describe("Admin Users List", () => {
   test.beforeEach(async ({ page }) => {

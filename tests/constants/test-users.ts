@@ -18,6 +18,13 @@ export const TEST_USERS = {
     role: "editor",
     authFile: "tests/.auth/editor-user.json",
   },
+  editor2: {
+    email: "editor2@test-seed.local",
+    password: "Editor2Password123!",
+    name: "Test Editor User 2",
+    role: "editor",
+    authFile: "tests/.auth/editor-user2.json",
+  },
   regular: {
     email: "user@test-seed.local",
     password: "UserPassword123!",

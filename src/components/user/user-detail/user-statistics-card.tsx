@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
 import { MessageCircle, Zap, TrendingUp, Cpu, Calendar } from "lucide-react";
-import { ProviderIcon } from "@/components/provider-icon";
 import { useProfileTranslations } from "@/hooks/use-profile-translations";
+
+import { ModelProviderIcon } from "ui/model-provider-icon";
 
 interface UserStatisticsCardProps {
   stats: {
@@ -148,7 +149,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                       className="flex items-center justify-between p-2 rounded bg-background/50 border"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <ProviderIcon
+                        <ModelProviderIcon
                           provider={modelStat.provider}
                           className="h-3 w-3 shrink-0"
                         />
@@ -203,7 +204,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                 </p>
                 <p className="text-lg font-semibold flex items-center justify-center gap-1">
                   {stats.modelStats[0] && (
-                    <ProviderIcon
+                    <ModelProviderIcon
                       provider={stats.modelStats[0].provider}
                       className="h-3 w-3"
                     />

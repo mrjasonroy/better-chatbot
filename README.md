@@ -285,16 +285,12 @@ docker compose -f docker/compose.yml up -d postgres
 # Apply migrations
 pnpm db:migrate
 
-# (Optional) Seed test users for E2E
-pnpm test:e2e:seed
 
 # Run app locally
 pnpm dev   # or: pnpm build && pnpm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to get started.
-
-<br/>
 
 ### Environment Variables
 

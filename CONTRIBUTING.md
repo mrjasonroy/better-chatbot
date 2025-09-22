@@ -76,7 +76,7 @@ If you are fixing a bug, please add tests to prevent the same bug from happening
    pnpm test:e2e -- tests/models/
 
    # Debug specific test
-   npx playwright test tests/agents/agent-visibility.spec.ts --headed
+   pnpm test:e2e -- tests/agents/agent-visibility.spec.ts --headed
    ```
 
    **E2E Test Requirements:**

@@ -1,7 +1,7 @@
 import { Agent } from "app-types/agent";
 import { UserPreferences } from "app-types/user";
 import { MCPServerConfig } from "app-types/mcp";
-import { sql, relations } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -336,27 +336,3 @@ export type McpServerCustomizationEntity =
 export type ArchiveEntity = typeof ArchiveSchema.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemSchema.$inferSelect;
 export type BookmarkEntity = typeof BookmarkSchema.$inferSelect;
-
-// Relation helpers for better query building
-export const userRelations = relations(UserSchema, ({ many }) => ({
-  sessions: many(SessionSchema),
-  accounts: many(AccountSchema),
-  chatThreads: many(ChatThreadSchema),
-  agents: many(AgentSchema),
-  bookmarks: many(BookmarkSchema),
-  archives: many(ArchiveSchema),
-}));
-
-export const sessionRelations = relations(SessionSchema, ({ one }) => ({
-  user: one(UserSchema, {
-    fields: [SessionSchema.userId],
-    references: [UserSchema.id],
-  }),
-}));
-
-export const accountRelations = relations(AccountSchema, ({ one }) => ({
-  user: one(UserSchema, {
-    fields: [AccountSchema.userId],
-    references: [UserSchema.id],
-  }),
-}));

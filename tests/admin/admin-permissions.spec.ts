@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { TEST_USERS } from "../constants/test-users";
 
 test.describe("Permissions", () => {
   test("regular user can access basic functionality", async ({ browser }) => {
     // Create context with regular user auth
     const context = await browser.newContext({
-      storageState: "tests/.auth/regular-user.json",
+      storageState: TEST_USERS.regular.authFile,
     });
     const page = await context.newPage();
 
@@ -24,7 +25,7 @@ test.describe("Permissions", () => {
     browser,
   }) => {
     const context = await browser.newContext({
-      storageState: "tests/.auth/editor-user.json",
+      storageState: TEST_USERS.editor.authFile,
     });
     const page = await context.newPage();
 
@@ -42,7 +43,7 @@ test.describe("Permissions", () => {
 
   test("regular user cannot access admin panel", async ({ browser }) => {
     const context = await browser.newContext({
-      storageState: "tests/.auth/regular-user.json",
+      storageState: TEST_USERS.regular.authFile,
     });
     const page = await context.newPage();
 
