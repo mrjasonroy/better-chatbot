@@ -47,7 +47,10 @@ export const createMcpServer = async (
       timeout: 15000,
     });
     if (!response.ok()) {
-      throw new Error(`Failed to create MCP server: ${response.status}`);
+      const errorBody = await response.text();
+      throw new Error(
+        `Failed to create MCP server: Status ${response.status()} - ${errorBody}`,
+      );
     }
     const serverInfo = (await response.json()) as { id: string };
     if (!serverInfo.id) {

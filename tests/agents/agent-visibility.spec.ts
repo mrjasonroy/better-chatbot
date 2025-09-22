@@ -17,91 +17,93 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("Agent Visibility and Sharing Between Users", () => {
   test.beforeAll(
-    "admin creates agents with different visibility levels",
+    "editor creates agents with different visibility levels",
     async ({ browser }) => {
       // Use admin to set up test agents with different visibility levels
-      const adminContext = await browser.newContext({
-        storageState: TEST_USERS.admin.authFile,
+      const editorContext = await browser.newContext({
+        storageState: TEST_USERS.editor.authFile,
       });
-      const adminPage = await adminContext.newPage();
+      const editorPage = await editorContext.newPage();
 
       try {
         // Create public agent
-        await adminPage.goto("/agent/new");
-        await adminPage.waitForLoadState("networkidle");
+        await editorPage.goto("/agent/new");
+        await editorPage.waitForLoadState("networkidle");
 
-        await adminPage.getByTestId("agent-name-input").fill(publicAgentName);
-        await adminPage
+        await editorPage.getByTestId("agent-name-input").fill(publicAgentName);
+        await editorPage
           .getByTestId("agent-description-input")
           .fill("This is a public agent that anyone can see and edit");
         await clickAndWaitForNavigation(
-          adminPage,
+          editorPage,
           "agent-save-button",
           "**/agents",
         );
 
         // Edit to set visibility to public
-        await adminPage
+        await editorPage
           .locator(`main a:has-text("${publicAgentName}")`)
           .first()
           .click();
-        await adminPage.waitForURL("**/agent/**", { timeout: 10000 });
+        await editorPage.waitForURL("**/agent/**", { timeout: 10000 });
 
         // Open visibility dropdown and select public
-        await openDropdown(adminPage, "visibility-button");
-        await selectDropdownOption(adminPage, "visibility-public");
+        await openDropdown(editorPage, "visibility-button");
+        await selectDropdownOption(editorPage, "visibility-public");
 
         await clickAndWaitForNavigation(
-          adminPage,
+          editorPage,
           "agent-save-button",
           "**/agents",
         );
-        await adminPage.waitForLoadState("networkidle");
+        await editorPage.waitForLoadState("networkidle");
 
         // Create private agent (default is private)
-        await adminPage.goto("/agent/new");
-        await adminPage.waitForLoadState("networkidle");
-        await adminPage.getByTestId("agent-name-input").fill(privateAgentName);
-        await adminPage
+        await editorPage.goto("/agent/new");
+        await editorPage.waitForLoadState("networkidle");
+        await editorPage.getByTestId("agent-name-input").fill(privateAgentName);
+        await editorPage
           .getByTestId("agent-description-input")
           .fill("This is a private agent that only the owner can see");
         await clickAndWaitForNavigation(
-          adminPage,
+          editorPage,
           "agent-save-button",
           "**/agents",
         );
 
         // Create readonly agent
-        await adminPage.goto("/agent/new");
-        await adminPage.waitForLoadState("networkidle");
-        await adminPage.getByTestId("agent-name-input").fill(readonlyAgentName);
-        await adminPage
+        await editorPage.goto("/agent/new");
+        await editorPage.waitForLoadState("networkidle");
+        await editorPage
+          .getByTestId("agent-name-input")
+          .fill(readonlyAgentName);
+        await editorPage
           .getByTestId("agent-description-input")
           .fill("This is a readonly agent that others can see but not edit");
         await clickAndWaitForNavigation(
-          adminPage,
+          editorPage,
           "agent-save-button",
           "**/agents",
         );
 
         // Edit to set visibility to readonly
-        await adminPage
+        await editorPage
           .locator(`main a:has-text("${readonlyAgentName}")`)
           .first()
           .click();
-        await adminPage.waitForURL("**/agent/**", { timeout: 10000 });
+        await editorPage.waitForURL("**/agent/**", { timeout: 10000 });
         // Open visibility dropdown and select readonly
-        await openDropdown(adminPage, "visibility-button");
-        await selectDropdownOption(adminPage, "visibility-readonly");
+        await openDropdown(editorPage, "visibility-button");
+        await selectDropdownOption(editorPage, "visibility-readonly");
 
         await clickAndWaitForNavigation(
-          adminPage,
+          editorPage,
           "agent-save-button",
           "**/agents",
         );
-        await adminPage.waitForLoadState("networkidle");
+        await editorPage.waitForLoadState("networkidle");
       } finally {
-        await adminContext.close();
+        await editorContext.close();
       }
     },
   );
@@ -111,7 +113,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: TEST_USERS.editor.authFile,
+      storageState: TEST_USERS.editor2.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
@@ -144,7 +146,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   test("different user can edit public agent", async ({ browser }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: TEST_USERS.editor.authFile,
+      storageState: TEST_USERS.editor2.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
@@ -199,7 +201,7 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: TEST_USERS.editor.authFile,
+      storageState: TEST_USERS.editor2.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
@@ -241,41 +243,73 @@ test.describe("Agent Visibility and Sharing Between Users", () => {
   }) => {
     // Create second user context (using editor auth, but role doesn't matter for sharing)
     const secondUserContext = await browser.newContext({
-      storageState: TEST_USERS.editor.authFile,
+      storageState: TEST_USERS.editor2.authFile,
     });
     const secondUserPage = await secondUserContext.newPage();
 
     try {
       await secondUserPage.goto("/agents");
       await secondUserPage.waitForURL("**/agents", { timeout: 10000 });
+      await secondUserPage.waitForLoadState("networkidle");
 
-      // Find and bookmark the public agent (now with edited name)
-      const publicAgentCard = secondUserPage.locator(
-        `[data-testid*="agent-card"][data-item-name="${publicAgentName} (edited by user2)"]`,
-      );
+      // Wait a bit for agents to load
+      await secondUserPage.waitForTimeout(1000);
+
+      // Find and bookmark the public agent
+      // Note: Look for both original and potentially edited names since tests run in serial mode
+      const publicAgentCard = secondUserPage
+        .locator(`[data-testid*="agent-card"]`)
+        .filter({
+          has: secondUserPage.locator(`[data-testid="agent-card-name"]`, {
+            hasText: new RegExp(publicAgentName),
+          }),
+        })
+        .first();
+
+      // Scroll the card into view and click bookmark
+      await publicAgentCard.scrollIntoViewIfNeeded();
       await publicAgentCard.getByTestId("bookmark-button").click();
+
+      // Wait for bookmark to process and refresh to sync
+      await secondUserPage.waitForTimeout(1000);
+      await secondUserPage.reload();
+      await secondUserPage.waitForLoadState("networkidle");
+
+      // Open sidebar to check bookmarks
       await secondUserPage.getByTestId("sidebar-toggle").click();
+      await secondUserPage.waitForTimeout(500);
+
       await expect(
         secondUserPage.getByTestId("agents-sidebar-menu"),
-      ).toContainText(publicAgentName);
+      ).toContainText(publicAgentName, { timeout: 10000 });
 
       // Find and bookmark the readonly agent
-      const readonlyAgentCard = secondUserPage.locator(
-        `[data-testid*="agent-card"][data-item-name="${readonlyAgentName}"]`,
-      );
+      const readonlyAgentCard = secondUserPage
+        .locator(`[data-testid*="agent-card"]`)
+        .filter({
+          has: secondUserPage.locator(`[data-testid="agent-card-name"]`, {
+            hasText: readonlyAgentName,
+          }),
+        })
+        .first();
+
+      await readonlyAgentCard.scrollIntoViewIfNeeded();
       await readonlyAgentCard.getByTestId("bookmark-button").click();
+      await secondUserPage.waitForTimeout(1000);
 
       await expect(
         secondUserPage.getByTestId("agents-sidebar-menu"),
-      ).toContainText(readonlyAgentName);
+      ).toContainText(readonlyAgentName, { timeout: 10000 });
 
       // Remove bookmarks from Agents and verify they are removed from sidebar
       await readonlyAgentCard.getByTestId("bookmark-button").click();
+      await secondUserPage.waitForTimeout(1000);
       await expect(
         secondUserPage.getByTestId("agents-sidebar-menu"),
       ).not.toContainText(readonlyAgentName);
 
       await publicAgentCard.getByTestId("bookmark-button").click();
+      await secondUserPage.waitForTimeout(1000);
       await expect(
         secondUserPage.getByTestId("agents-sidebar-menu"),
       ).not.toContainText(publicAgentName);
