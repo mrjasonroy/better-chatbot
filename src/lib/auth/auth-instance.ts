@@ -111,7 +111,6 @@ const options = {
       ).filter((key) => socialAuthenticationProviders[key]),
     },
   },
-  trustedOrigins: [process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL],
   socialProviders: socialAuthenticationProviders,
 } satisfies BetterAuthOptions;
 
