@@ -59,5 +59,8 @@ describe("User Utils", () => {
       expect(getIsUserAdmin({ role: "ADMIN" })).toBe(false); // wrong case
       expect(getIsUserAdmin({ role: " admin " })).toBe(false); // whitespace
     });
+    it("should handle undefined user", () => {
+      expect(getIsUserAdmin(undefined)).toBe(false);
+    });
   });
 });

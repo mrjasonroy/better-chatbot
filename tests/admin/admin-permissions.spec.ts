@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { TEST_USERS } from "../constants/test-users";
+import { ensureSidebarOpen } from "../helpers/sidebar-helper";
 
 test.describe("Permissions", () => {
   test("regular user can access basic functionality", async ({ browser }) => {
@@ -52,6 +53,59 @@ test.describe("Permissions", () => {
     await page.waitForLoadState("networkidle");
     await expect(page.getByText("401")).toBeVisible();
 
+    await context.close();
+  });
+  test("ensure admin sidebar link is visible to admin", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: TEST_USERS.admin.authFile,
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await ensureSidebarOpen(page);
+    await expect(page.getByTestId("admin-sidebar-link")).toBeVisible();
+    await context.close();
+  });
+  test("ensure admin sidebar link is not visible to editor", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      storageState: TEST_USERS.editor.authFile,
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await ensureSidebarOpen(page);
+    await expect(page.getByTestId("admin-sidebar-link")).not.toBeVisible();
+    await context.close();
+  });
+  test("ensure admin sidebar link is not visible to regular user", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      storageState: TEST_USERS.regular.authFile,
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await ensureSidebarOpen(page);
+    await expect(page.getByTestId("admin-sidebar-link")).not.toBeVisible();
+    await context.close();
+  });
+  test("ensure admin sidebar link goes to users page and shows user menu", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      storageState: TEST_USERS.admin.authFile,
+    });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await ensureSidebarOpen(page);
+    await page.getByTestId("admin-sidebar-link").click();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByTestId("admin-sidebar-link-users")).toBeVisible();
+    expect(page.url()).toContain("/admin/users");
     await context.close();
   });
 });

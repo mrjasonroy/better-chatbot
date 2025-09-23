@@ -5,14 +5,14 @@ import { ActionState } from "lib/action-utils";
 import { BasicUserWithLastLogin } from "app-types/user";
 
 export const UpdateUserRoleSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.uuid("Invalid user ID"),
   role: z
     .enum(Object.values(USER_ROLES) as [UserRoleNames, ...UserRoleNames[]])
     .optional(),
 });
 
 export const UpdateUserBanStatusSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.uuid("Invalid user ID"),
   banned: z.enum(["true", "false"]).transform((value) => value === "true"),
   banReason: z.string().optional(),
 });

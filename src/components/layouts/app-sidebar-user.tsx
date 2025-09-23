@@ -25,7 +25,6 @@ import {
   Sun,
   MoonStar,
   ChevronRight,
-  Shield,
   Settings,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -41,7 +40,7 @@ import { GithubIcon } from "ui/github-icon";
 import { DiscordIcon } from "ui/discord-icon";
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { BasicUser } from "app-types/user";
-import { getIsUserAdmin, getUserAvatar } from "lib/user/utils";
+import { getUserAvatar } from "lib/user/utils";
 import { Skeleton } from "ui/skeleton";
 
 export function AppSidebarUserInner(props: {
@@ -155,17 +154,7 @@ export function AppSidebarUserInner(props: {
               <span>{t("joinCommunity")}</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            {getIsUserAdmin(user) && (
-              <>
-                <DropdownMenuItem
-                  onClick={() => (window.location.href = "/admin")}
-                  className="cursor-pointer"
-                >
-                  <Shield className="size-4 text-foreground" />
-                  <span>Admin</span>
-                </DropdownMenuItem>
-              </>
-            )}
+
             <DropdownMenuItem
               onClick={() => appStoreMutate({ openUserSettings: true })}
               className="cursor-pointer"

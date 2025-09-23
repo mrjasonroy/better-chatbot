@@ -30,7 +30,7 @@ export const updateUserDetailsAction = validatedActionWithUserManagePermission(
     const t = await getTranslations("User.Profile.common");
 
     try {
-      const { name, email } = data;
+      const { name, email, image } = data;
       const user = await getUser(userId);
       if (!user) {
         return {
@@ -43,18 +43,18 @@ export const updateUserDetailsAction = validatedActionWithUserManagePermission(
       if (isOwnResource) {
         if (
           (name && name !== userSession.user.name) ||
-          (data.image && data.image !== userSession.user.image)
+          (image && image !== userSession.user.image)
         ) {
           await auth.api.updateUser({
             returnHeaders: true,
-            body: { name: data.name, ...(data.image && { image: data.image }) },
+            body: { name, ...(image && { image }) },
             headers: await headers(),
           });
         }
         if (email && email !== userSession.user.email) {
           await auth.api.changeEmail({
             returnHeaders: true,
-            body: { newEmail: data.email },
+            body: { newEmail: email },
             headers: await headers(),
           });
         }

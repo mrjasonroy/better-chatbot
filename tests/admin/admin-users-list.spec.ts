@@ -45,7 +45,7 @@ test.describe("Admin Users List", () => {
       await page.waitForLoadState("networkidle");
 
       // Click back button
-      const backButton = page.getByRole("button", { name: /back/i });
+      const backButton = page.getByTestId("admin-users-back-button");
       await backButton.click();
       await page.waitForLoadState("networkidle");
 

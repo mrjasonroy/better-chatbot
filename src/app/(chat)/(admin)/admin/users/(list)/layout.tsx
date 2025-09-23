@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "ui/card";
-import { AdminHeader } from "@/components/admin/admin-header";
 import { getTranslations } from "next-intl/server";
 
 interface UsersLayoutProps {
@@ -17,8 +16,7 @@ export default async function UsersLayout({ children }: UsersLayoutProps) {
   const t = await getTranslations("Admin.Users");
 
   return (
-    <main className="relative bg-background w-full flex flex-col min-h-screen">
-      <AdminHeader />
+    <div className="relative bg-background w-full flex flex-col min-h-screen">
       <div className="flex-1 overflow-y-auto p-6 w-full">
         <div className="space-y-6 w-full max-w-none">
           {/* Header Section */}
@@ -39,6 +37,6 @@ export default async function UsersLayout({ children }: UsersLayoutProps) {
           </Card>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

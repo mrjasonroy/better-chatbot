@@ -300,6 +300,8 @@
   },
   "Layout": {
     "workflow": "Workflow",
+    "admin": "Admin",
+    "users": "Users",
     "toggleSidebar": "Toggle Sidebar",
     "newChat": "New Chat",
     "mcpConfiguration": "MCP Configuration",
@@ -502,7 +504,9 @@
         "currentPassword": "Current password",
         "confirmPassword": "Confirm new password",
         "updatePasswordButton": "Update Password",
-        "updateRole": "Update Role"
+        "updateRole": "Update Role",
+        "userDeletedSuccessfully": "User deleted successfully",
+        "failedToDeleteUser": "Failed to delete user"
       },
       "user": {
         "pageTitle": "My Profile",
@@ -531,7 +535,7 @@
         "userBannedDescription": "Your account is currently banned from accessing the application",
         "clickToChangeUserRole": "Contact an admin to change your role",
         "userHasPassword": "You have a password set",
-        "userOAuthOnly": "You sign in with OAuth only",
+        "userOAuthOnly": "You only sign in with OAuth",
         "clickToEdit": "Click to edit your {field}",
         "changeUserPassword": "This will change your password.",
         "viewUserSessionsAndAccess": "View your sessions and access",
@@ -564,7 +568,9 @@
         "currentPassword": "Current password",
         "confirmPassword": "Confirm new password",
         "updatePasswordButton": "Change Password",
-        "updateRole": "Update Role"
+        "updateRole": "Update Role",
+        "userDeletedSuccessfully": "User deleted successfully",
+        "failedToDeleteUser": "Failed to delete user"
       },
       "common": {
         "details": "Details",
@@ -633,11 +639,14 @@
         "userBannedSuccessfully": "User banned successfully",
         "userUnbannedSuccessfully": "User unbanned successfully",
         "bannedByAdmin": "Banned by admin",
-        "unknownError": "Unknown error"
+        "unknownError": "Unknown error",
+        "userDeletedSuccessfully": "User deleted successfully",
+        "failedToDeleteUser": "Failed to delete user"
       }
     }
   },
   "Admin": {
+    "title": "Admin",
     "Sidebar": {
       "users": "Users",
       "toggleSidebar": "Toggle Sidebar",

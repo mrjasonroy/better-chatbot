@@ -21,14 +21,14 @@ export type UpdateUserPasswordError =
   (typeof UpdateUserPasswordError)[keyof typeof UpdateUserPasswordError];
 
 export const UpdateUserDetailsSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.uuid("Invalid user ID"),
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address").optional(),
   image: z.string().optional(),
 });
 
 export const DeleteUserSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.uuid("Invalid user ID"),
 });
 
 export const UpdateUserPasswordSchema = z
@@ -42,13 +42,13 @@ export const UpdateUserPasswordSchema = z
   .superRefine((data, ctx) => {
     if (data.newPassword !== data.confirmPassword) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: UpdateUserPasswordError.PASSWORD_MISMATCH,
       });
     }
     if (data.isCurrentUser && !data.currentPassword) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: UpdateUserPasswordError.CURRENT_PASSWORD_REQUIRED,
       });
     }

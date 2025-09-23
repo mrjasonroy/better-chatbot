@@ -4,11 +4,12 @@
  * Creates 21 users with proper password hashing via Better Auth
  *
  * Usage:
- *   npm run test:e2e:seed
  *   pnpm test:e2e:seed
  */
 
 import { config } from "dotenv";
+
+import { TEST_USERS } from "../tests/constants/test-users";
 
 // Load environment variables FIRST
 if (process.env.CI) {
@@ -254,36 +255,36 @@ async function seedTestUsers() {
 
     // 1. Admin User
     const adminUser = await createUserWithBetterAuth({
-      email: "admin@test-seed.local",
-      password: "AdminPassword123!",
-      name: "Test Admin User",
+      email: TEST_USERS.admin.email,
+      password: TEST_USERS.admin.password,
+      name: TEST_USERS.admin.name,
       role: USER_ROLES.ADMIN,
     });
     console.log("✅ Created admin user:", adminUser?.id);
 
     // 2. Editor User
     const editorUser = await createUserWithBetterAuth({
-      email: "editor@test-seed.local",
-      password: "EditorPassword123!",
-      name: "Test Editor User",
+      email: TEST_USERS.editor.email,
+      password: TEST_USERS.editor.password,
+      name: TEST_USERS.editor.name,
       role: USER_ROLES.EDITOR,
     });
     console.log("✅ Created editor user:", editorUser?.id);
 
     // 3. Editor2 User
     const editor2User = await createUserWithBetterAuth({
-      email: "editor2@test-seed.local",
-      password: "Editor2Password123!",
-      name: "Test Editor User 2",
+      email: TEST_USERS.editor2.email,
+      password: TEST_USERS.editor2.password,
+      name: TEST_USERS.editor2.name,
       role: USER_ROLES.EDITOR,
     });
     console.log("✅ Created editor2 user:", editor2User?.id);
 
     // 4. Regular User
     const regularUser = await createUserWithBetterAuth({
-      email: "user@test-seed.local",
-      password: "UserPassword123!",
-      name: "Test Regular User",
+      email: TEST_USERS.regular.email,
+      password: TEST_USERS.regular.password,
+      name: TEST_USERS.regular.name,
       role: USER_ROLES.USER,
     });
     console.log("✅ Created regular user:", regularUser?.id);
@@ -332,17 +333,29 @@ async function seedTestUsers() {
     );
 
     console.log("\n🔑 Test Credentials:");
-    console.log("  Admin: admin@test-seed.local / AdminPassword123!");
-    console.log("  Editor: editor@test-seed.local / EditorPassword123!");
-    console.log("  Editor2: editor2@test-seed.local / Editor2Password123!");
-    console.log("  Regular: user@test-seed.local / UserPassword123!");
-    console.log("  Others: testuser{4-21}@test-seed.local / TestPass{n}!");
+    console.log(
+      `  Admin: ${TEST_USERS.admin.email} / ${TEST_USERS.admin.password}`,
+    );
+    console.log(
+      `  Editor: ${TEST_USERS.editor.email} / ${TEST_USERS.editor.password}`,
+    );
+    console.log(
+      `  Editor2: ${TEST_USERS.editor2.email} / ${TEST_USERS.editor2.password}`,
+    );
+    console.log(
+      `  Regular: ${TEST_USERS.regular.email} / ${TEST_USERS.regular.password}`,
+    );
+    console.log(`  Others: testuser{4-21}@test-seed.local / TestPass{n}!`);
 
     console.log("\n📁 Auth Files Will Be Created:");
-    console.log("  - tests/.auth/admin.json (admin user)");
-    console.log("  - tests/.auth/editor-user.json (editor user)");
-    console.log("  - tests/.auth/editor-user2.json (editor2 user)");
-    console.log("  - tests/.auth/regular-user.json (regular user)");
+    console.log(`  - tests/.auth/${TEST_USERS.admin.authFile} (admin user)`);
+    console.log(`  - tests/.auth/${TEST_USERS.editor.authFile} (editor user)`);
+    console.log(
+      `  - tests/.auth/${TEST_USERS.editor2.authFile} (editor2 user)`,
+    );
+    console.log(
+      `  - tests/.auth/${TEST_USERS.regular.authFile} (regular user)`,
+    );
   } catch (error) {
     console.error("❌ Error seeding test users:", error);
     throw error;
