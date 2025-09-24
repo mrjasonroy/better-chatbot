@@ -23,7 +23,7 @@ export const updateUserDetailsAction = validatedActionWithUserManagePermission(
   async (
     data,
     userId,
-    userSession,
+    _userSession,
     isOwnResource,
     _formData,
   ): Promise<UpdateUserActionState> => {
@@ -39,9 +39,9 @@ export const updateUserDetailsAction = validatedActionWithUserManagePermission(
         };
       }
 
-      const isDifferentEmail = email && email !== userSession.user.email;
-      const isDifferentName = name && name !== userSession.user.name;
-      const isDifferentImage = image && image !== userSession.user.image;
+      const isDifferentEmail = email && email !== user.email;
+      const isDifferentName = name && name !== user.name;
+      const isDifferentImage = image && image !== user.image;
 
       // this forces a session update for the current user, getting the latest data
       if (isOwnResource) {
@@ -94,7 +94,7 @@ export const deleteUserAction = validatedActionWithAdminPermission(
         headers: await headers(),
       });
     } catch (error) {
-      console.error("Failed to delete user:", error);
+      logger.error("Failed to delete user:", error);
       return {
         success: false,
         message: t("failedToDeleteUser"),
@@ -162,7 +162,6 @@ export const updateUserPasswordAction = validatedActionWithUserManagePermission(
         message: t("passwordUpdatedSuccessfully"),
       };
     } catch (_error) {
-      console.error("Failed to update user password:", _error);
       return {
         success: false,
         message: t("failedToUpdatePassword"),
