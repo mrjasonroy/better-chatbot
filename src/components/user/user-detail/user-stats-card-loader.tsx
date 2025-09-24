@@ -50,9 +50,9 @@ export const UserStatsCardLoaderSkeleton = () => {
           </div>
 
           {/* Models Used */}
-          <div className="rounded-lg border p-3 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+          <div className="rounded-lg border p-3 bg-muted/30">
             <div className="flex items-center gap-3">
-              <div className="rounded-full p-2 bg-blue-100 dark:bg-blue-900/30 shrink-0">
+              <div className="rounded-full p-2 bg-muted shrink-0">
                 <Skeleton className="h-4 w-4" />
               </div>
               <div>
@@ -63,9 +63,9 @@ export const UserStatsCardLoaderSkeleton = () => {
           </div>
 
           {/* Messages */}
-          <div className="rounded-lg border p-3 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+          <div className="rounded-lg border p-3 bg-muted/30">
             <div className="flex items-center gap-3">
-              <div className="rounded-full p-2 bg-green-100 dark:bg-green-900/30 shrink-0">
+              <div className="rounded-full p-2 bg-muted shrink-0">
                 <Skeleton className="h-4 w-4" />
               </div>
               <div>
@@ -77,31 +77,50 @@ export const UserStatsCardLoaderSkeleton = () => {
         </div>
 
         {/* Top Models by Token Usage */}
-        <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+        <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
           <h4 className="text-sm font-medium flex items-center gap-2">
             <Skeleton className="h-4 w-4" />
             <Skeleton className="h-4 w-40" />
           </h4>
 
-          <div className="grid gap-2 sm:grid-cols-2">
-            {/* Model items */}
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-2 rounded bg-background/50 border"
-              >
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <Skeleton className="h-3 w-3 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1">
-                      <Skeleton className="h-3 w-20" />
-                    </div>
-                    <Skeleton className="h-3 w-12" />
-                  </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Pie Chart Skeleton */}
+            <div className="min-h-[300px]">
+              <div className="rounded-lg border bg-background/50 p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-4 w-4" />
                 </div>
-                <Skeleton className="h-3 w-12 shrink-0 ml-2" />
+                <div className="flex items-center justify-center">
+                  <Skeleton className="h-48 w-48 rounded-full" />
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Model List Skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32 mb-3" />
+              <div className="max-h-[280px] overflow-y-auto pr-2 space-y-2">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 rounded-lg bg-background/50 border"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        {index < 3 && <Skeleton className="h-5 w-6 rounded" />}
+                        <Skeleton className="h-4 w-4 shrink-0" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Skeleton className="h-4 w-20 mb-1" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-4 w-12 shrink-0 ml-3" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -127,7 +146,7 @@ export const UserStatsCardLoaderSkeleton = () => {
         </div>
 
         {/* Summary/Insights */}
-        <div className="rounded-lg border-l-4 border-l-primary bg-primary/5 p-3">
+        <div className="rounded-lg bg-primary/5 p-3">
           <div className="space-y-1">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />

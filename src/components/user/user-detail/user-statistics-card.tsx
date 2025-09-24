@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
-import { MessageCircle, Zap, TrendingUp, Cpu, Calendar } from "lucide-react";
+import { MessageCircle, Zap, TrendingUp, Cpu } from "lucide-react";
 import { useProfileTranslations } from "@/hooks/use-profile-translations";
+import { PieChart } from "@/components/tool-invocation/pie-chart";
 
 import { ModelProviderIcon } from "ui/model-provider-icon";
 
@@ -24,6 +25,13 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
   const { t, tCommon } = useProfileTranslations(view);
   const hasActivity = stats.totalTokens > 0;
 
+  // Prepare pie chart data for model usage (TOP 3 only)
+  const top3Models = stats.modelStats.slice(0, 3);
+  const modelPieData = top3Models.map((model) => ({
+    label: model.model,
+    value: model.totalTokens,
+  }));
+
   return (
     <Card
       className="transition-all duration-200 hover:shadow-md"
@@ -35,7 +43,6 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
           {tCommon("usageStatistics")}
         </CardTitle>
         <p className="text-sm text-muted-foreground flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
           {t("aiModelUsageFor", { period: stats.period })}
         </p>
       </CardHeader>
@@ -71,7 +78,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                     <Zap className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
                       {tCommon("totalTokens")}
                     </p>
                     <p
@@ -86,19 +93,19 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
 
               {/* Models Used */}
               <div
-                className="rounded-lg border p-3 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+                className="rounded-lg border p-3 bg-muted/30"
                 data-testid="models-used-stat"
               >
                 <div className="flex items-center gap-3">
-                  <div className="rounded-full p-2 bg-blue-100 dark:bg-blue-900/30 shrink-0">
-                    <Cpu className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <div className="rounded-full p-2 bg-muted shrink-0">
+                    <Cpu className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
                       {tCommon("models")}
                     </p>
                     <p
-                      className="text-xl font-bold text-blue-700 dark:text-blue-400"
+                      className="text-xl font-bold"
                       data-testid="stat-models-used"
                     >
                       {stats.modelStats.length}
@@ -109,19 +116,19 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
 
               {/* Messages */}
               <div
-                className="rounded-lg border p-3 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
+                className="rounded-lg border p-3 bg-muted/30"
                 data-testid="messages-stat"
               >
                 <div className="flex items-center gap-3">
-                  <div className="rounded-full p-2 bg-green-100 dark:bg-green-900/30 shrink-0">
-                    <MessageCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <div className="rounded-full p-2 bg-muted shrink-0">
+                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
                       {tCommon("messages")}
                     </p>
                     <p
-                      className="text-xl font-bold text-green-700 dark:text-green-400"
+                      className="text-xl font-bold"
                       data-testid="stat-messages-sent"
                     >
                       {stats.messageCount}
@@ -134,7 +141,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
             {/* Top Models by Token Usage */}
             {stats.modelStats.length > 0 && (
               <div
-                className="rounded-lg border bg-muted/30 p-4 space-y-3"
+                className="rounded-lg border bg-muted/30 p-4 space-y-4"
                 data-testid="top-models-section"
               >
                 <h4 className="text-sm font-medium flex items-center gap-2">
@@ -142,31 +149,54 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                   {tCommon("topModelsByTokenUsage")}
                 </h4>
 
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {stats.modelStats.map((modelStat) => (
-                    <div
-                      key={modelStat.model}
-                      className="flex items-center justify-between p-2 rounded bg-background/50 border"
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <ModelProviderIcon
-                          provider={modelStat.provider}
-                          className="h-3 w-3 shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs font-medium truncate">
-                            {modelStat.model}
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {/* Pie Chart - TOP 3 Models */}
+                  <div className="min-h-[300px]">
+                    <PieChart
+                      title="Top 3 Models Usage"
+                      data={modelPieData}
+                      unit="tokens"
+                      prefix=""
+                      jsonView={false}
+                      description="Token usage by top 3 models"
+                    />
+                  </div>
+
+                  {/* Model List - Vertical Layout with Scroll */}
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto ">
+                    <div className="pr-2 space-y-2">
+                      {stats.modelStats.map((modelStat, index) => (
+                        <div
+                          key={modelStat.model}
+                          className={`flex items-center justify-between p-3 rounded-lg border hover:bg-background/70 transition-colors ${
+                            index < 3
+                              ? "bg-primary/5 border-primary/20"
+                              : "bg-background/50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <ModelProviderIcon
+                                provider={modelStat.provider}
+                                className="h-4 w-4 shrink-0"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium truncate">
+                                {modelStat.model}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {modelStat.messageCount} {tCommon("msgs")}
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {modelStat.messageCount} {tCommon("msgs")}
+                          <div className="text-sm font-semibold text-right shrink-0 ml-3">
+                            {modelStat.totalTokens.toLocaleString()}
                           </div>
                         </div>
-                      </div>
-                      <div className="text-xs font-semibold text-right shrink-0 ml-2">
-                        {modelStat.totalTokens.toLocaleString()}
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -174,7 +204,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
             {/* Quick Stats */}
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-lg border bg-muted/30 p-3 text-center">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground mb-1">
                   {tCommon("conversations")}
                 </p>
                 <p
@@ -186,7 +216,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-3 text-center">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground mb-1">
                   {tCommon("avgTokensPerMessage")}
                 </p>
                 <p className="text-lg font-semibold">
@@ -199,14 +229,14 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-3 text-center">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground mr-1 mb-1">
                   {tCommon("topModel")}
                 </p>
                 <p className="text-lg font-semibold flex items-center justify-center gap-1">
                   {stats.modelStats[0] && (
                     <ModelProviderIcon
                       provider={stats.modelStats[0].provider}
-                      className="h-3 w-3"
+                      className="h-3 w-3 mr-1"
                     />
                   )}
                   <span className="truncate">
@@ -218,7 +248,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
 
             {/* Insights */}
             {stats.totalTokens > 0 && (
-              <div className="rounded-lg border-l-4 border-l-primary bg-primary/5 p-3">
+              <div className="rounded-lg p-3">
                 <p className="text-sm text-primary/80">
                   {tCommon("summaryPrefix")}
                   <strong>{tCommon("summary")}:</strong>{" "}

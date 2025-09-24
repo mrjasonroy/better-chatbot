@@ -18,22 +18,14 @@ export default async function UsersLayout({ children }: UsersLayoutProps) {
   return (
     <div className="relative bg-background w-full flex flex-col min-h-screen">
       <div className="flex-1 overflow-y-auto p-6 w-full">
-        <div className="space-y-6 w-full max-w-none">
-          {/* Header Section */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">{t("title")}</h1>
-              <p className="text-muted-foreground">{t("viewAndManageUsers")}</p>
-            </div>
-          </div>
-
+        <div className="space-y-4 w-full max-w-none">
           {/* Main Card */}
-          <Card className="w-full">
+          <Card className="w-full border-none bg-transparent">
             <CardHeader>
-              <CardTitle>{t("allUsers")}</CardTitle>
+              <CardTitle className="text-2xl">{t("allUsers")}</CardTitle>
               <CardDescription>{t("viewAndManageUsers")}</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 w-full">{children}</CardContent>
+            <CardContent className="p-2 md:p-6 w-full">{children}</CardContent>
           </Card>
         </div>
       </div>
