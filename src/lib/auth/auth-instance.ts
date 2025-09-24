@@ -3,6 +3,7 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins";
+import { customSession } from "better-auth/plugins";
 import { pgDb } from "lib/db/pg/db.pg";
 import { headers } from "next/headers";
 import {
@@ -116,7 +117,16 @@ const options = {
 
 export const auth = betterAuth({
   ...options,
-  plugins: [...(options.plugins ?? [])],
+  plugins: [
+    ...(options.plugins ?? []),
+    customSession(async ({ user, session }) => {
+      const { image: _, ...userWithoutImage } = user;
+      return {
+        ...session,
+        user: { ...userWithoutImage },
+      };
+    }, options),
+  ],
 });
 
 export const getSession = async () => {
