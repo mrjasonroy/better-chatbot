@@ -250,8 +250,6 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
             {stats.totalTokens > 0 && (
               <div className="rounded-lg p-3">
                 <p className="text-sm text-primary/80">
-                  {tCommon("summaryPrefix")}
-                  <strong>{tCommon("summary")}:</strong>{" "}
                   {tCommon("tokensAcross", {
                     tokens: stats.totalTokens.toLocaleString(),
                     count: stats.modelStats.length,

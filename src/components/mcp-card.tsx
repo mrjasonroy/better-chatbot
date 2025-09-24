@@ -141,21 +141,9 @@ export const MCPCard = memo(function MCPCard({
         <h4 className="font-bold text-xs sm:text-lg flex items-center gap-1">
           {name}
         </h4>
-        {/* Show user info for featured servers */}
-        {!isOwner && userName && (
-          <div className="flex items-center gap-1.5 ml-3">
-            <Avatar className="size-5 ring shrink-0 rounded-full">
-              <AvatarImage src={userAvatar || undefined} />
-              <AvatarFallback className="text-xs">
-                {userName[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-xs text-muted-foreground font-medium">
-              {userName}
-            </span>
-          </div>
-        )}
+
         <div className="flex-1" />
+
         {needsAuthorization && (
           <>
             <Tooltip>
@@ -267,6 +255,25 @@ export const MCPCard = memo(function MCPCard({
           disabled={isLoading}
           renderActions={() => null}
         />
+        {/* Show user info for featured servers */}
+        {!isOwner && userName && (
+          <>
+            <div className="h-4">
+              <Separator orientation="vertical" />
+            </div>
+            <div className="flex items-center gap-1.5 ml-2">
+              <Avatar className="size-4 ring shrink-0 rounded-full">
+                <AvatarImage src={userAvatar || undefined} />
+                <AvatarFallback className="text-xs">
+                  {userName[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs text-muted-foreground font-medium">
+                {userName}
+              </span>
+            </div>
+          </>
+        )}
       </CardHeader>
 
       {errorMessage && <ErrorAlert error={errorMessage} />}

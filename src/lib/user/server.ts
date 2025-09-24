@@ -1,3 +1,5 @@
+"use server";
+
 import { BasicUserWithLastLogin, UserPreferences } from "app-types/user";
 import { auth, getSession } from "auth/server";
 import { Session } from "better-auth";
@@ -72,9 +74,9 @@ export async function getUserSessions(userId?: string): Promise<Session[]> {
  * if the current user does not have access to the requested user, we throw a 404 error
  * if the requested user id is not found, we throw a 404 error
  */
-export const getUserIdAndCheckAccess = async (
+export async function getUserIdAndCheckAccess(
   requestedUserId?: string,
-): Promise<string> => {
+): Promise<string> {
   const session = await getSession();
   if (!session) {
     notFound();
@@ -85,7 +87,7 @@ export const getUserIdAndCheckAccess = async (
     notFound();
   }
   return userId;
-};
+}
 
 /**
  * Get the user stats

@@ -28,7 +28,7 @@ function SortIcon({
 // Sortable table header component
 interface SortableHeaderProps {
   field: string;
-  label: string;
+  children: React.ReactNode;
   currentSortBy: string;
   currentSortDirection: "asc" | "desc";
   onSort: (field: string) => void;
@@ -38,7 +38,7 @@ interface SortableHeaderProps {
 
 export function SortableHeader({
   field,
-  label,
+  children,
   currentSortBy,
   currentSortDirection,
   onSort,
@@ -70,7 +70,7 @@ export function SortableHeader({
       data-testid={testId}
     >
       <div className="flex items-center gap-2">
-        {label}
+        {children}
         <SortIcon
           field={field}
           currentSortBy={currentSortBy}

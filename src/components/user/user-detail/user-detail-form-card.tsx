@@ -59,7 +59,6 @@ export function UserDetailFormCard({
     }
     return result;
   }, {});
-
   return (
     <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader className="pb-4">

@@ -191,31 +191,34 @@ export function UsersTable({
             <TableRow className="hover:bg-transparent">
               <SortableHeader
                 field="name"
-                label={t("user")}
                 currentSortBy={sortBy}
                 currentSortDirection={sortDirection}
                 onSort={handleSort}
                 data-testid="sort-header-name"
-              />
+              >
+                <span className="px-2">{t("user")}</span>
+              </SortableHeader>
               <SortableHeader
                 field="role"
-                label={t("role")}
                 currentSortBy={sortBy}
                 currentSortDirection={sortDirection}
                 onSort={handleSort}
                 data-testid="sort-header-role"
-              />
+              >
+                {t("role")}
+              </SortableHeader>
               <TableHead className="font-semibold" data-testid="header-status">
                 {t("status")}
               </TableHead>
               <SortableHeader
                 field="createdAt"
-                label={t("joined")}
                 currentSortBy={sortBy}
                 currentSortDirection={sortDirection}
                 onSort={handleSort}
                 data-testid="sort-header-createdAt"
-              />
+              >
+                {t("joined")}
+              </SortableHeader>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -238,8 +241,8 @@ export function UsersTable({
                   data-testid={`user-row-${user.id}`}
                 >
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
+                    <div className="flex items-center gap-3 px-2">
+                      <Avatar className="size-8 rounded-full">
                         <AvatarImage src={getUserAvatar(user)} />
                         <AvatarFallback className="text-sm">
                           {user.name.slice(0, 2).toUpperCase()}
