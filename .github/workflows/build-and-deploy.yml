@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       skip_docker_build:
-        description: 'Skip Docker build/publish'
+        description: "Skip Docker build/publish"
         required: false
         default: false
         type: boolean
@@ -115,14 +115,14 @@ jobs:
           sudo chmod +x /usr/local/bin/yq
 
           # Update only the better-chatbot section, preserving all other sections
-          yq eval '.better-chatbot.image.tag = "${{ needs.set-versions.outputs.app_version }}"' -i dev-versions.yaml
+          yq eval '.better-chatbot.image.tag = "${{ needs.set-versions.outputs.app_version }}"' -i dev-version.yaml
 
           # Configure git
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
           # Commit and push changes
-          git add dev-versions.yaml
+          git add dev-version.yaml
           git commit -m "build: set version ${{ needs.set-versions.outputs.app_version }} for comparenetworks-ai-agent-ui-chart"
           git push
 
