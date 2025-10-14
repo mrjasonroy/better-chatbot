@@ -3,7 +3,7 @@ import "server-only";
 // import { google } from "@ai-sdk/google";
 // import { createAnthropic } from "@ai-sdk/anthropic";
 // import { createOpenAI } from "@ai-sdk/openai";
-import { LanguageModelV2, openrouter } from "@openrouter/ai-sdk-provider";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import { LanguageModel } from "ai";
 import {
   createOpenAICompatibleModels,
