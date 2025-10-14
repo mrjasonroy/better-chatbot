@@ -50,8 +50,11 @@ jobs:
           echo "Docker tag: ${DOCKER_TAG}"
 
   build-and-publish:
+    needs: [set-versions]
+    strategy:
+      matrix:
+        environment: [dev, staging, production]
     runs-on: ubuntu-latest
-    needs: set-versions
     if: ${{ !inputs.skip_docker_build }}
 
     permissions:
@@ -72,7 +75,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push environment image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -80,21 +83,21 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}
-            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-${{ matrix.environment }}
+            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.environment }}
           build-args: |
+            CONFIG_ENV=${{ matrix.environment }}
             APP_VERSION=${{ needs.set-versions.outputs.app_version }}
             GIT_HASH=${{ needs.set-versions.outputs.git_hash }}
             DOCKER_BUILD=1
-          cache-from: |
-            type=gha
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:cache
-          cache-to: |
-            type=gha,mode=max
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:cache,mode=max
+          labels: |
+            application.version=${{ needs.set-versions.outputs.app_version }}
+            application.name=better-chatbot
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-  update-helm-chart:
-    needs: [set-versions, build-and-publish]
+  update-dev-environment:
+    needs: [set-versions, build-and-push]
     runs-on: ubuntu-latest
     if: ${{ !inputs.skip_docker_build }}
     steps:
@@ -102,28 +105,27 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: globalspec/cnai-chart
-          token: ${{ secrets.GH_ACTIONS_READ_WRITE_TOKEN }}
+          token: ${{ secrets.GH_ACTIONS_PAT }}
           path: helm-chart
 
       - name: Update Helm Chart Version
         env:
-          GH_TOKEN: ${{ secrets.GH_ACTIONS_READ_WRITE_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_ACTIONS_PAT }}
         run: |
-          cd helm-chart/
-          # Install yq for YAML processing
-          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
-
-          # Update only the better-chatbot section, preserving all other sections
-          yq eval '.better-chatbot.image.tag = "${{ needs.set-versions.outputs.app_version }}"' -i dev-version.yaml
+          cd helm-chart
+          # Update the dev version file
+          cat > environments/cnai/dev-version.yaml << EOF
+          image:
+            tag: "${{ needs.set-versions.outputs.app_version }}-dev"
+          EOF
 
           # Configure git
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
           # Commit and push changes
-          git add dev-version.yaml
-          git commit -m "build: set version ${{ needs.set-versions.outputs.app_version }} for comparenetworks-ai-agent-ui-chart"
+          git add environments/cnai/dev-version.yaml
+          git commit -m "build: update better-chatbot dev to version ${{ needs.set-versions.outputs.app_version }}"
           git push
 
       - name: Summary
@@ -131,10 +133,12 @@ jobs:
           echo "## 🎉 Build and Deploy Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ inputs.skip_docker_build }}" != "true" ]]; then
-            echo "✅ Docker image built and published" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Docker images built and published for all environments" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Docker Image:**" >> $GITHUB_STEP_SUMMARY
-            echo "${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Docker Images:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Dev: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-dev" >> $GITHUB_STEP_SUMMARY
+            echo "- Staging: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-staging" >> $GITHUB_STEP_SUMMARY
+            echo "- Production: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-production" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🚀 Ready for deployment!" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Dev environment updated automatically!" >> $GITHUB_STEP_SUMMARY
