@@ -2,24 +2,20 @@ FROM node:23-alpine AS base
 # Install pnpm globally
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-FROM base AS deps
-RUN apk add --no-cache libc6-compat python3 make g++ openssl
-WORKDIR /app
-
-# Copy package files for dependency installation
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
 FROM base AS builder
 ARG CONFIG_ENV
 ARG APP_VERSION
 ARG GIT_HASH
 ARG DOCKER_BUILD="1"
+
+RUN apk add --no-cache libc6-compat python3 make g++ openssl
 WORKDIR /app
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy all files needed for install
 COPY . .
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
 
 # Copy environment-specific .env file if it exists, otherwise use default
 RUN if [ -f ".env.${CONFIG_ENV}" ]; then \
@@ -44,8 +40,8 @@ ENV NEXT_STANDALONE_OUTPUT="true"
 
 RUN pnpm build
 
-# Prune dev dependencies
-RUN pnpm prune --prod && pnpm store prune
+# Prune dev dependencies to reduce size
+RUN pnpm prune --prod
 
 FROM node:23-alpine AS runner
 RUN apk add --no-cache openssl
