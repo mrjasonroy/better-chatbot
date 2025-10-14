@@ -40,8 +40,8 @@ ENV NEXT_STANDALONE_OUTPUT="true"
 
 RUN pnpm build
 
-# Prune dev dependencies to reduce size
-RUN pnpm prune --prod
+# Prune dev dependencies to reduce size (ignore scripts since tsx will be removed)
+RUN pnpm prune --prod --ignore-scripts
 
 FROM node:23-alpine AS runner
 RUN apk add --no-cache openssl
