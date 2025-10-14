@@ -97,7 +97,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   update-dev-environment:
-    needs: [set-versions, build-and-push]
+    needs: [set-versions, build-and-publish]
     runs-on: ubuntu-latest
     if: ${{ !inputs.skip_docker_build }}
     steps:
