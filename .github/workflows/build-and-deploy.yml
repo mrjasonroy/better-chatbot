@@ -53,7 +53,7 @@ jobs:
     needs: [set-versions]
     strategy:
       matrix:
-        environment: [dev, staging, production]
+        environment: [dev, test, production]
     runs-on: ubuntu-latest
     if: ${{ !inputs.skip_docker_build }}
 
@@ -137,7 +137,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Docker Images:**" >> $GITHUB_STEP_SUMMARY
             echo "- Dev: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-dev" >> $GITHUB_STEP_SUMMARY
-            echo "- Staging: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-staging" >> $GITHUB_STEP_SUMMARY
+            echo "- Test: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-test" >> $GITHUB_STEP_SUMMARY
             echo "- Production: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-production" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
