@@ -1,7 +1,9 @@
 import { BlendIcon } from "lucide-react";
 import { ClaudeIcon } from "./claude-icon";
+import { DeepSeekIcon } from "./deepseek-icon";
 import { GeminiIcon } from "./gemini-icon";
 import { GrokIcon } from "./grok-icon";
+import { MetaIcon } from "./meta-icon";
 import { OpenAIIcon } from "./openai-icon";
 import { OllamaIcon } from "./ollama-icon";
 import { OpenRouterIcon } from "./open-router-icon";
@@ -18,6 +20,10 @@ export function ModelProviderIcon({
     <ClaudeIcon className={className} />
   ) : provider === "google" ? (
     <GeminiIcon className={className} />
+  ) : provider === "deepseek" ? (
+    <DeepSeekIcon className={className} />
+  ) : provider === "meta" ? (
+    <MetaIcon className={className} />
   ) : provider === "ollama" ? (
     <OllamaIcon className={className} />
   ) : provider === "openRouter" ? (
