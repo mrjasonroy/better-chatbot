@@ -13,6 +13,7 @@ import {
   openaiCompatibleModelsSafeParse,
 } from "./create-openai-compatiable";
 import { ChatModel } from "app-types/chat";
+import { DEFAULT_FILE_PART_MIME_TYPES } from "./file-support";
 
 const ollama = createOllama({
   baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -89,6 +90,24 @@ const staticSupportImageInputModels = {
   ...staticModels.anthropic,
 };
 
+const staticFilePartSupportByModel = new Map<
+  LanguageModel,
+  readonly string[]
+>();
+
+const registerDefaultFileSupport = (model?: LanguageModel) => {
+  if (!model) return;
+  staticFilePartSupportByModel.set(
+    model,
+    Array.from(DEFAULT_FILE_PART_MIME_TYPES),
+  );
+};
+
+registerDefaultFileSupport(staticModels.openai["gpt-4.1"]);
+registerDefaultFileSupport(staticModels.openai["gpt-4.1-mini"]);
+registerDefaultFileSupport(staticModels.openai["gpt-5"]);
+registerDefaultFileSupport(staticModels.openai["gpt-5-mini"]);
+
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
   process.env.OPENAI_COMPATIBLE_DATA,
 );
@@ -113,6 +132,10 @@ const isImageInputUnsupportedModel = (model: LanguageModelV2) => {
   return !Object.values(staticSupportImageInputModels).includes(model);
 };
 
+export const getFilePartSupportedMimeTypes = (model: LanguageModel) => {
+  return staticFilePartSupportByModel.get(model) ?? [];
+};
+
 const fallbackModel = staticModels.openai["gpt-4.1"];
 
 export const customModelProvider = {
@@ -122,6 +145,7 @@ export const customModelProvider = {
       name,
       isToolCallUnsupported: isToolCallUnsupportedModel(model),
       isImageInputUnsupported: isImageInputUnsupportedModel(model),
+      supportedFileMimeTypes: [...getFilePartSupportedMimeTypes(model)],
     })),
     hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),

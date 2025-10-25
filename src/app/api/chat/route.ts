@@ -49,6 +49,8 @@ import { colorize } from "consola/utils";
 import { generateUUID } from "lib/utils";
 import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
+import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
+import { serverFileStorage } from "lib/file-storage";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -72,6 +74,7 @@ export async function POST(request: Request) {
       allowedMcpServers,
       imageTool,
       mentions = [],
+      attachments = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
     const model = customModelProvider.getModel(chatModel);
@@ -104,6 +107,27 @@ export async function POST(request: Request) {
     if (messages.at(-1)?.id == message.id) {
       messages.pop();
     }
+    const ingestionPreviewParts = await buildCsvIngestionPreviewParts(
+      attachments,
+      (key) => serverFileStorage.download(key),
+    );
+    if (ingestionPreviewParts.length) {
+      const baseParts = [...message.parts];
+      let insertionIndex = -1;
+      for (let i = baseParts.length - 1; i >= 0; i -= 1) {
+        if (baseParts[i]?.type === "text") {
+          insertionIndex = i;
+          break;
+        }
+      }
+      if (insertionIndex !== -1) {
+        baseParts.splice(insertionIndex, 0, ...ingestionPreviewParts);
+        message.parts = baseParts;
+      } else {
+        message.parts = [...baseParts, ...ingestionPreviewParts];
+      }
+    }
+
     messages.push(message);
 
     const supportToolCall = !isToolCallUnsupportedModel(model);

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Button } from "ui/button";
+import { Badge } from "ui/badge";
 import { Markdown } from "./markdown";
 import { cn, safeJSONParse, truncateString } from "lib/utils";
 import JsonView from "ui/json-view";
@@ -1190,8 +1191,16 @@ export const FileMessagePart = memo(
     const isImage = part.mediaType?.startsWith("image/");
 
     const fileExtension =
-      part.filename?.split(".").pop()?.toUpperCase() || "FILE";
+      part.filename?.split(".").pop()?.toUpperCase() ||
+      part.mediaType?.split("/").pop()?.toUpperCase() ||
+      "FILE";
     const fileUrl = part.url;
+    const filename =
+      part.filename || part.url?.split("/").pop() || "Attachment";
+    const secondaryLabel =
+      part.mediaType && part.mediaType !== "application/octet-stream"
+        ? part.mediaType
+        : undefined;
 
     if (isImage && fileUrl) {
       return (
@@ -1220,30 +1229,52 @@ export const FileMessagePart = memo(
     return (
       <div
         className={cn(
-          "max-w-sm rounded-lg border border-border bg-muted p-4",
+          "max-w-md rounded-2xl border border-border/80 bg-background/70 p-4 shadow-sm backdrop-blur-sm",
           isUserMessage ? "ml-auto" : "mr-auto",
         )}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 p-2 rounded bg-background">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 rounded-xl bg-muted p-3">
             <FileIcon className="size-6 text-muted-foreground" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">
-              {part.filename || "File"}
+          <div className="flex-1 min-w-0 space-y-1 pr-3">
+            <p
+              className="text-sm font-medium text-foreground truncate max-w-[18rem]"
+              title={filename}
+            >
+              {filename}
             </p>
-            <p className="text-xs text-muted-foreground">{fileExtension}</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge
+                variant="outline"
+                className="uppercase tracking-wide px-2 py-0.5"
+              >
+                {fileExtension}
+              </Badge>
+              {secondaryLabel && (
+                <span className="truncate max-w-[10rem]" title={secondaryLabel}>
+                  {secondaryLabel}
+                </span>
+              )}
+            </div>
           </div>
           {fileUrl && (
-            <a
-              href={fileUrl}
-              download={part.filename}
-              className="flex-shrink-0"
-            >
-              <Button size="icon" variant="ghost" className="size-8">
-                <Download className="size-4" />
-              </Button>
-            </a>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  size="icon"
+                  variant="ghost"
+                  className="size-9 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                >
+                  <a href={fileUrl} download={part.filename ?? filename}>
+                    <Download className="size-4" />
+                    <span className="sr-only">Download {filename}</span>
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Download</TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -1252,3 +1283,51 @@ export const FileMessagePart = memo(
 );
 
 FileMessagePart.displayName = "FileMessagePart";
+
+// Source URL (non-model) attachment renderer
+export function SourceUrlMessagePart({
+  part,
+  isUserMessage,
+}: {
+  part: { type: "source-url"; url: string; title?: string; mediaType?: string };
+  isUserMessage: boolean;
+}) {
+  const name = part.title || part.url?.split("/").pop() || "attachment";
+  const ext = name.split(".").pop()?.toUpperCase() || "FILE";
+  return (
+    <div
+      className={cn(
+        "max-w-sm rounded-lg border border-border bg-muted p-4",
+        isUserMessage ? "ml-auto" : "mr-auto",
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0 p-2 rounded bg-background">
+          <FileIcon className="size-6 text-muted-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <a
+            href={part.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium truncate hover:underline"
+            title={name}
+          >
+            {name}
+          </a>
+          <p className="text-xs text-muted-foreground">{ext}</p>
+        </div>
+        <a
+          href={part.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-shrink-0"
+        >
+          <Button size="icon" variant="ghost" className="size-8">
+            <Download className="size-4" />
+          </Button>
+        </a>
+      </div>
+    </div>
+  );
+}
