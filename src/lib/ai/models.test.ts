@@ -1,5 +1,9 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { DEFAULT_FILE_PART_MIME_TYPES } from "./file-support";
+import {
+  DEFAULT_FILE_PART_MIME_TYPES,
+  OPENAI_FILE_MIME_TYPES,
+  ANTHROPIC_FILE_MIME_TYPES,
+} from "./file-support";
 
 vi.mock("server-only", () => ({}));
 
@@ -17,7 +21,7 @@ describe("customModelProvider file support metadata", () => {
       model: "gpt-4.1",
     });
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
-      Array.from(DEFAULT_FILE_PART_MIME_TYPES),
+      Array.from(OPENAI_FILE_MIME_TYPES),
     );
 
     const openaiProvider = customModelProvider.modelsInfo.find(
@@ -28,25 +32,18 @@ describe("customModelProvider file support metadata", () => {
     );
 
     expect(metadata?.supportedFileMimeTypes).toEqual(
-      Array.from(DEFAULT_FILE_PART_MIME_TYPES),
+      Array.from(OPENAI_FILE_MIME_TYPES),
     );
   });
 
-  it("marks non-file-capable providers with empty mime support", () => {
+  it("adds rich support for anthropic sonnet-4.5", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({
-      provider: "google",
-      model: "gemini-2.5-flash",
+      provider: "anthropic",
+      model: "sonnet-4.5",
     });
-    expect(getFilePartSupportedMimeTypes(model)).toEqual([]);
-
-    const provider = customModelProvider.modelsInfo.find(
-      (item) => item.provider === "google",
+    expect(getFilePartSupportedMimeTypes(model)).toEqual(
+      Array.from(ANTHROPIC_FILE_MIME_TYPES),
     );
-    const metadata = provider?.models.find(
-      (item) => item.name === "gemini-2.5-flash",
-    );
-
-    expect(metadata?.supportedFileMimeTypes).toEqual([]);
   });
 });

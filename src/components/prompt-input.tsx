@@ -323,6 +323,10 @@ export default function PromptInput({
 
   const submit = () => {
     if (isLoading) return;
+    if (uploadedFiles.some((file) => file.isUploading)) {
+      toast.error("Please wait for files to finish uploading before sending.");
+      return;
+    }
     const userMessage = input?.trim() || "";
     if (userMessage.length === 0) return;
 
@@ -335,6 +339,7 @@ export default function PromptInput({
         supportedFileMimeTypes,
       );
       const link = file.url || file.dataUrl || "";
+      if (!link) return acc;
       if (isFileSupported) {
         acc.push({
           type: "file",
@@ -353,6 +358,21 @@ export default function PromptInput({
       }
       return acc;
     }, []);
+
+    if (attachmentParts.length) {
+      const summary = uploadedFiles
+        .map((file, index) => {
+          const type = file.mimeType || "unknown";
+          return `${index + 1}. ${file.name} (${type})`;
+        })
+        .join("\n");
+
+      attachmentParts.unshift({
+        type: "text",
+        text: `Attached files:\n${summary}`,
+        ingestionPreview: true,
+      });
+    }
 
     sendMessage({
       role: "user",

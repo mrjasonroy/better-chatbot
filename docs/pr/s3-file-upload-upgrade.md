@@ -2,7 +2,7 @@
 
 ## Summary
 - add a first-class S3 storage driver (presigned PUT uploads, direct download helpers, end-to-end tests, and a CLI verification script) with new environment variables and setup docs
-- broaden file upload UX: drag-and-drop overlay hook, multi-file threaded uploader refactor, filename-aware MIME gating, locale copy updates, and richer file bubbles with truncation + badges
+- broaden file upload UX: drag-and-drop overlay hook, multi-file threaded uploader refactor, expanded provider-specific MIME allowlists, locale copy updates, and richer file bubbles with truncation + badges
 - surface per-model supported MIME metadata so unsupported models gracefully downgrade to source links instead of breaking tool calls
 - auto-ingest CSV attachments by generating hidden markdown previews for the model, while keeping chat bubbles clean; added helpers and coverage for ingestion preview formatting
 - refreshed docs (`docs/storage/s3-setup.md`, `AGENTS.md`) and added targeted unit tests across storage, ingestion, and file-support utilities
