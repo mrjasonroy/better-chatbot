@@ -132,37 +132,34 @@ async function convertToGeminiMessage(
     data: string | Uint8Array | ArrayBuffer | Buffer | URL;
     mimeType: string;
   }): Promise<{ data: string; mimeType: string }> => {
-    // If not a URL string, delegate to generic helper
     if (
-      !(
-        typeof input.data === "string" &&
-        (input.data.startsWith("http://") || input.data.startsWith("https://"))
-      )
+      typeof input.data === "string" &&
+      (input.data.startsWith("http://") || input.data.startsWith("https://"))
     ) {
-      return getBase64Data(input);
-    }
-
-    // Try fetching directly (public URLs)
-    try {
-      const resp = await fetch(input.data);
-      if (resp.ok) {
-        const buf = Buffer.from(await resp.arrayBuffer());
-        return { data: buf.toString("base64"), mimeType: input.mimeType };
+      // Try fetching directly (public URLs)
+      try {
+        const resp = await fetch(input.data);
+        if (resp.ok) {
+          const buf = Buffer.from(await resp.arrayBuffer());
+          return { data: buf.toString("base64"), mimeType: input.mimeType };
+        }
+      } catch {
+        // fall through to storage fallback
       }
-    } catch {
-      // fall through to storage fallback
+
+      // Fallback: derive key and download via storage backend (works for private buckets)
+      try {
+        const u = new URL(input.data as string);
+        const key = decodeURIComponent(u.pathname.replace(/^\//, ""));
+        const buf = await serverFileStorage.download(key);
+        return { data: buf.toString("base64"), mimeType: input.mimeType };
+      } catch {
+        // Ignore and fall back to generic helper below
+      }
     }
 
-    // Fallback: derive key and download via storage backend (works for private buckets)
-    try {
-      const u = new URL(input.data as string);
-      const key = decodeURIComponent(u.pathname.replace(/^\//, ""));
-      const buf = await serverFileStorage.download(key);
-      return { data: buf.toString("base64"), mimeType: input.mimeType };
-    } catch (_e) {
-      // Final attempt: delegate to generic helper to surface proper errors
-      return getBase64Data(input);
-    }
+    // Default fallback: use generic helper (handles base64, buffers, blobs, etc.)
+    return getBase64Data(input);
   };
   const parts = isString(message.content)
     ? ([{ text: message.content }] as GeminiPart[])

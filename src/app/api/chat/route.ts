@@ -128,6 +128,49 @@ export async function POST(request: Request) {
       }
     }
 
+    if (attachments.length) {
+      const firstTextIndex = message.parts.findIndex(
+        (part: any) => part?.type === "text",
+      );
+      const attachmentParts: any[] = [];
+
+      attachments.forEach((attachment) => {
+        const exists = message.parts.some(
+          (part: any) =>
+            part?.type === attachment.type && part?.url === attachment.url,
+        );
+        if (exists) return;
+
+        if (attachment.type === "file") {
+          attachmentParts.push({
+            type: "file",
+            url: attachment.url,
+            mediaType: attachment.mediaType,
+            filename: attachment.filename,
+          });
+        } else if (attachment.type === "source-url") {
+          attachmentParts.push({
+            type: "source-url",
+            url: attachment.url,
+            mediaType: attachment.mediaType,
+            title: attachment.filename,
+          });
+        }
+      });
+
+      if (attachmentParts.length) {
+        if (firstTextIndex >= 0) {
+          message.parts = [
+            ...message.parts.slice(0, firstTextIndex),
+            ...attachmentParts,
+            ...message.parts.slice(firstTextIndex),
+          ];
+        } else {
+          message.parts = [...message.parts, ...attachmentParts];
+        }
+      }
+    }
+
     messages.push(message);
 
     const supportToolCall = !isToolCallUnsupportedModel(model);

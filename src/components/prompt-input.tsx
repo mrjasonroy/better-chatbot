@@ -5,6 +5,7 @@ import {
   ChevronDown,
   CornerRightUp,
   FileIcon,
+  FileTextIcon,
   ImagesIcon,
   Loader2,
   PaperclipIcon,
@@ -643,11 +644,11 @@ export default function PromptInput({
                 <div className="flex flex-wrap gap-2">
                   {uploadedFiles.map((file) => {
                     const isImage = file.mimeType.startsWith("image/");
-                    const fileExtension =
-                      file.name.split(".").pop()?.toUpperCase() || "FILE";
                     const imageSrc =
                       file.previewUrl || file.url || file.dataUrl || "";
-
+                    const displayName = file.name;
+                    const displayExt =
+                      file.name.split(".").pop()?.toUpperCase() || "FILE";
                     const isSummarizable = isIngestSupported(file.mimeType);
                     return (
                       <div
@@ -662,10 +663,13 @@ export default function PromptInput({
                             className="w-24 h-24 object-cover"
                           />
                         ) : (
-                          <div className="w-24 h-24 flex flex-col items-center justify-center bg-muted">
+                          <div className="w-32 h-28 flex flex-col items-center justify-center bg-muted px-2 py-3 text-center">
                             <FileIcon className="size-8 text-muted-foreground mb-1" />
-                            <span className="text-xs font-medium text-muted-foreground">
-                              {fileExtension}
+                            <span className="text-xs font-medium text-muted-foreground line-clamp-2 w-full">
+                              {displayName}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground/80">
+                              {displayExt}
                             </span>
                           </div>
                         )}
@@ -695,49 +699,57 @@ export default function PromptInput({
                               : "opacity-0 group-hover:opacity-100",
                           )}
                         >
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 items-center">
                             {isSummarizable && (
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={async () => {
-                                  try {
-                                    const url = file.url || file.dataUrl;
-                                    if (!url) {
-                                      toast.error("No file URL available");
-                                      return;
-                                    }
-                                    const res = await fetch(
-                                      "/api/storage/ingest",
-                                      {
-                                        method: "POST",
-                                        headers: {
-                                          "Content-Type": "application/json",
-                                        },
-                                        body: JSON.stringify({ url }),
-                                      },
-                                    );
-                                    if (!res.ok) {
-                                      const e = await res
-                                        .json()
-                                        .catch(() => ({}));
-                                      toast.error(
-                                        e.error || "Failed to ingest file",
-                                      );
-                                      return;
-                                    }
-                                    const data = await res.json();
-                                    // Append preview text to input for the user to send
-                                    setInput(
-                                      `${input ? input + "\n\n" : ""}${data.text}`,
-                                    );
-                                  } catch (_err) {
-                                    toast.error("Failed to ingest file");
-                                  }
-                                }}
-                              >
-                                Summarize
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="rounded-full"
+                                    onClick={async () => {
+                                      try {
+                                        const url = file.url || file.dataUrl;
+                                        if (!url) {
+                                          toast.error("No file URL available");
+                                          return;
+                                        }
+                                        const res = await fetch(
+                                          "/api/storage/ingest",
+                                          {
+                                            method: "POST",
+                                            headers: {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                            body: JSON.stringify({ url }),
+                                          },
+                                        );
+                                        if (!res.ok) {
+                                          const e = await res
+                                            .json()
+                                            .catch(() => ({}));
+                                          toast.error(
+                                            e.error || "Failed to ingest file",
+                                          );
+                                          return;
+                                        }
+                                        const data = await res.json();
+                                        // Append preview text to input for the user to send
+                                        setInput(
+                                          `${input ? input + "\n\n" : ""}${data.text}`,
+                                        );
+                                      } catch (_err) {
+                                        toast.error("Failed to ingest file");
+                                      }
+                                    }}
+                                  >
+                                    <FileTextIcon className="size-4" />
+                                    <span className="sr-only">Summarize</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Summarize</TooltipContent>
+                              </Tooltip>
                             )}
                             <Button
                               variant="ghost"

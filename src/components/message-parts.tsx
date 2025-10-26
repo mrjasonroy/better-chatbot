@@ -1239,7 +1239,7 @@ export const FileMessagePart = memo(
           </div>
           <div className="flex-1 min-w-0 space-y-1 pr-3">
             <p
-              className="text-sm font-medium text-foreground truncate max-w-[18rem]"
+              className="text-sm font-medium text-foreground line-clamp-1"
               title={filename}
             >
               {filename}
@@ -1294,39 +1294,61 @@ export function SourceUrlMessagePart({
 }) {
   const name = part.title || part.url?.split("/").pop() || "attachment";
   const ext = name.split(".").pop()?.toUpperCase() || "FILE";
+  const mediaType =
+    part.mediaType && part.mediaType !== "application/octet-stream"
+      ? part.mediaType
+      : undefined;
   return (
     <div
       className={cn(
-        "max-w-sm rounded-lg border border-border bg-muted p-4",
+        "max-w-md rounded-2xl border border-border/80 bg-muted/60 p-4 backdrop-blur-sm shadow-sm",
         isUserMessage ? "ml-auto" : "mr-auto",
       )}
     >
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 p-2 rounded bg-background">
+      <div className="flex items-start gap-4 max-w-sm">
+        <div className="flex-shrink-0 rounded-xl bg-muted p-3">
           <FileIcon className="size-6 text-muted-foreground" />
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 space-y-1 pr-3">
           <a
             href={part.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium truncate hover:underline"
+            className="text-sm font-medium text-foreground hover:underline line-clamp-1"
             title={name}
           >
             {name}
           </a>
-          <p className="text-xs text-muted-foreground">{ext}</p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <Badge
+              variant="outline"
+              className="uppercase tracking-wide px-2 py-0.5"
+            >
+              {ext}
+            </Badge>
+            {mediaType && (
+              <span className="truncate max-w-[10rem]" title={mediaType}>
+                {mediaType}
+              </span>
+            )}
+          </div>
         </div>
-        <a
-          href={part.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-shrink-0"
-        >
-          <Button size="icon" variant="ghost" className="size-8">
-            <Download className="size-4" />
-          </Button>
-        </a>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              asChild
+              size="icon"
+              variant="ghost"
+              className="size-9 flex-shrink-0 text-muted-foreground hover:text-foreground"
+            >
+              <a href={part.url} target="_blank" rel="noopener noreferrer">
+                <Download className="size-4" />
+                <span className="sr-only">Open attachment</span>
+              </a>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Open attachment</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

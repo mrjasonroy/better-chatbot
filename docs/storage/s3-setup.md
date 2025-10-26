@@ -1,22 +1,21 @@
 # S3 Storage Setup
 
-This app supports S3 for file uploads (dev/prod). Dev uses presigned PUT from the browser; prod should keep the bucket private and serve via CDN (CloudFront + OAC) or signed GETs.
+This app supports S3 for file uploads (dev/prod). Development can rely on presigned PUTs directly from the browser, while production should keep the bucket private and serve via CDN (CloudFront + Origin Access Control) or signed GET URLs.
 
 ## Buckets
-- us-east-2 (example/ours):
-  - Dev/Test: `cnai-dts` (public GET on `uploads/` only)
-  - Prod: `cnai-prod` (private)
-- Enable: default encryption (SSE-S3) and versioning.
+- Pick a region (e.g., `us-east-2`)
+  - Dev/Test example: `better-chatbot-dev` (public GET on `uploads/` only if needed)
+  - Prod example: `better-chatbot-prod` (private)
+- Enable default encryption (SSE-S3) and versioning on both buckets.
 
 ## CORS
-- Dev (`cnai-dts`): allow PUT/GET/HEAD from
+- Dev bucket: allow PUT/GET/HEAD from the origins you use locally and in staging, for example:
   - `http://localhost:3000`, `http://127.0.0.1:3000`
-  - `https://cnai-dev.dts.cluster`, `http://cnai-dev.dts.cluster`
-  - `https://cnai-dev.comparenetworks.cloud`, `http://cnai-dev.comparenetworks.cloud`
-- Prod (`cnai-prod`): GET/HEAD only from `https://cnai.comparenetworks.cloud` (no browser PUT).
+  - `https://staging.your-domain.com`, `http://staging.your-domain.com`
+- Prod bucket: allow GET/HEAD only from your production domain (e.g., `https://app.your-domain.com`). Avoid enabling browser PUT in production.
 
 ## Dev public-read policy (prefix-only)
-Grant public GET for `uploads/` prefix on `cnai-dts` only:
+Grant public GET for the `uploads/` prefix on the dev bucket only if you need unauthenticated downloads:
 ```
 {
   "Version": "2012-10-17",
@@ -26,7 +25,7 @@ Grant public GET for `uploads/` prefix on `cnai-dts` only:
       "Effect": "Allow",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::cnai-dts/uploads/*"
+      "Resource": "arn:aws:s3:::better-chatbot-dev/uploads/*"
     }
   ]
 }
@@ -35,26 +34,26 @@ Grant public GET for `uploads/` prefix on `cnai-dts` only:
 ## IAM (app runtime)
 Least privilege for app role/user:
 - Actions: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject`, `s3:HeadObject`
-- Resources: `arn:aws:s3:::<bucket>/uploads/*`
+- Resources: `arn:aws:s3:::<bucket-name>/uploads/*`
 
 ## Env configuration
 - Dev/local:
   - `FILE_STORAGE_TYPE=s3`
   - `FILE_STORAGE_PREFIX=uploads`
-  - `FILE_STORAGE_S3_BUCKET=cnai-dts`
-  - `FILE_STORAGE_S3_REGION=us-east-2` (or `AWS_REGION`)
-  - Use AWS SSO/profile or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`.
+  - `FILE_STORAGE_S3_BUCKET=better-chatbot-dev`
+  - `FILE_STORAGE_S3_REGION=us-east-2` (or set `AWS_REGION`)
+  - Use AWS SSO/profile or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`
 - Prod:
-  - `FILE_STORAGE_S3_BUCKET=cnai-prod`
-  - Prefer CloudFront; set `FILE_STORAGE_S3_PUBLIC_BASE_URL=https://<cdn-domain>`.
+  - `FILE_STORAGE_S3_BUCKET=better-chatbot-prod`
+  - Prefer CloudFront; set `FILE_STORAGE_S3_PUBLIC_BASE_URL=https://<cdn-domain>`
 
 ## Verify locally
-- Ensure `aws sso login --profile AWSPowerUserAccess`.
+- Ensure `aws sso login --profile <your_profile>` (or credentials are already available).
 - Test presign script:
 ```
-AWS_PROFILE=AWSPowerUserAccess \
+AWS_PROFILE=<your_profile> \
 FILE_STORAGE_TYPE=s3 \
-FILE_STORAGE_S3_BUCKET=cnai-dts \
+FILE_STORAGE_S3_BUCKET=better-chatbot-dev \
 FILE_STORAGE_S3_REGION=us-east-2 \
 pnpm tsx scripts/verify-s3-upload-url.ts
 ```
