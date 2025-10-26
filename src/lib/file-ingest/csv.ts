@@ -61,7 +61,7 @@ export function parseCsvPreview(
   }
   // flush last field/row
   pushField();
-  if (row.length > 1 || row[0] !== "") pushRow();
+  if (row.some(field => field !== "")) pushRow();
 
   const totalRows = rows.length;
   const header = rows[0] ?? [];
