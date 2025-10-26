@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_FILE_PART_MIME_TYPES,
   OPENAI_FILE_MIME_TYPES,
   ANTHROPIC_FILE_MIME_TYPES,
 } from "./file-support";
