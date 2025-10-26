@@ -164,30 +164,26 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         }
         const lastMessage = messages.at(-1)!;
         // Filter out UI-only parts (e.g., source-url) so the model doesn't receive unknown parts
-        const attachments: ChatAttachment[] = lastMessage.parts.flatMap(
-          (part: any) => {
+        const attachments: ChatAttachment[] = lastMessage.parts.reduce(
+          (acc: ChatAttachment[], part: any) => {
             if (part?.type === "file") {
-              return [
-                {
-                  type: "file" as const,
-                  url: part.url,
-                  mediaType: part.mediaType,
-                  filename: part.filename,
-                },
-              ];
+              acc.push({
+                type: "file",
+                url: part.url,
+                mediaType: part.mediaType,
+                filename: part.filename,
+              });
+            } else if (part?.type === "source-url") {
+              acc.push({
+                type: "source-url",
+                url: part.url,
+                mediaType: part.mediaType,
+                filename: part.title,
+              });
             }
-            if (part?.type === "source-url") {
-              return [
-                {
-                  type: "source-url" as const,
-                  url: part.url,
-                  mediaType: part.mediaType,
-                  filename: part.title,
-                },
-              ];
-            }
-            return [];
+            return acc;
           },
+          [],
         );
 
         const sanitizedLastMessage = {
