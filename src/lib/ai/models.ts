@@ -155,11 +155,19 @@ registerFileSupport(
 );
 
 registerFileSupport(
-  staticModels.anthropic["sonnet-4.5"],
+  staticModels.anthropic["claude-sonnet-4.5"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 registerFileSupport(
-  staticModels.anthropic["opus-4.1"],
+  staticModels.anthropic["claude-3.5-sonnet"],
+  ANTHROPIC_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.anthropic["claude-3.5-haiku"],
+  ANTHROPIC_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.anthropic["claude-opus-4.1"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 
