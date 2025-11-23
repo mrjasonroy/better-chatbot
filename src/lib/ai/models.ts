@@ -91,8 +91,13 @@ const staticModels = {
     "o1-mini": getGateway("openai", "o1-mini"),
   },
   google: {
+    "gemini-3.0-pro-preview": getGateway("google", "gemini-3.0-pro-preview"),
     "gemini-2.5-flash": getGateway("google", "gemini-2.5-flash"),
     "gemini-2.5-pro": getGateway("google", "gemini-2.5-pro"),
+    "gemini-2.5-flash-image-preview": getGateway(
+      "google",
+      "gemini-2.5-flash-image-preview",
+    ),
     "gemini-2.0-flash-exp": getGateway("google", "gemini-2.0-flash-exp"),
     "gemini-1.5-flash": getGateway("google", "gemini-1.5-flash"),
     "gemini-1.5-pro": getGateway("google", "gemini-1.5-pro"),
@@ -142,7 +147,7 @@ registerFileSupport(staticModels.openai["gpt-5-mini"], OPENAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.openai["gpt-5-nano"], OPENAI_FILE_MIME_TYPES);
 
 registerFileSupport(
-  staticModels.google["gemini-2.5-flash-lite"],
+  staticModels.google["gemini-3.0-pro-preview"],
   GEMINI_FILE_MIME_TYPES,
 );
 registerFileSupport(
@@ -151,6 +156,10 @@ registerFileSupport(
 );
 registerFileSupport(
   staticModels.google["gemini-2.5-pro"],
+  GEMINI_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.google["gemini-2.5-flash-image-preview"],
   GEMINI_FILE_MIME_TYPES,
 );
 
