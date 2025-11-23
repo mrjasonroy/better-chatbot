@@ -77,12 +77,12 @@ export const nanoBananaTool = createTool({
                   contentType: image.mimeType,
                 },
               );
-              // Use presigned URL for private buckets
-              const downloadUrl = await serverFileStorage.getDownloadUrl(
-                uploadedImage.key,
-              );
+              // Use presigned URL for private buckets if available
+              const downloadUrl = serverFileStorage.getDownloadUrl
+                ? await serverFileStorage.getDownloadUrl(uploadedImage.key)
+                : uploadedImage.sourceUrl;
               return {
-                url: downloadUrl,
+                url: downloadUrl || uploadedImage.sourceUrl,
                 mimeType: image.mimeType,
               };
             }),
@@ -180,12 +180,17 @@ export const openaiImageTool = createTool({
               "Image generation was successful, but file upload failed. Please check your file upload configuration and try again.",
             );
           });
-        // Use presigned URL for private buckets
-        const downloadUrl = await serverFileStorage.getDownloadUrl(
-          uploadedImage.key,
-        );
+        // Use presigned URL for private buckets if available
+        const downloadUrl = serverFileStorage.getDownloadUrl
+          ? await serverFileStorage.getDownloadUrl(uploadedImage.key)
+          : uploadedImage.sourceUrl;
         return {
-          images: [{ url: downloadUrl, mimeType: "image/webp" }],
+          images: [
+            {
+              url: downloadUrl || uploadedImage.sourceUrl,
+              mimeType: "image/webp",
+            },
+          ],
           mode,
           model: "gpt-image-1-mini",
           guide:
