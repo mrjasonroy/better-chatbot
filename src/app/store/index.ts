@@ -89,6 +89,7 @@ const initialState: AppState = {
     AppDefaultToolkit.Code,
     AppDefaultToolkit.Visualization,
     AppDefaultToolkit.WebSearch,
+    // FileGenerator will be added dynamically if storage is configured
   ],
   toolPresets: [],
   chatModel: undefined,
