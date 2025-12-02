@@ -138,13 +138,10 @@ const registerFileSupport = (
 };
 
 registerFileSupport(staticModels.openai["gpt-4.1"], OPENAI_FILE_MIME_TYPES);
-registerFileSupport(
-  staticModels.openai["gpt-4.1-mini"],
-  OPENAI_FILE_MIME_TYPES,
-);
 registerFileSupport(staticModels.openai["gpt-5"], OPENAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.openai["gpt-5-mini"], OPENAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.openai["gpt-5-nano"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.openai["gpt-4o"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.openai["gpt-4o-mini"], OPENAI_FILE_MIME_TYPES);
 
 registerFileSupport(
   staticModels.google["gemini-3.0-pro-preview"],
