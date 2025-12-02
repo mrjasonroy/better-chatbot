@@ -3,6 +3,7 @@ export enum AppDefaultToolkit {
   WebSearch = "webSearch",
   Http = "http",
   Code = "code",
+  FileGenerator = "fileGenerator",
 }
 
 export enum DefaultToolName {
