@@ -36,8 +36,8 @@ import { useTranslations } from "next-intl";
 import useSWR from "swr";
 import { getLocaleAction } from "@/i18n/get-locale";
 import { Suspense, useCallback } from "react";
-import { GithubIcon } from "ui/github-icon";
-import { DiscordIcon } from "ui/discord-icon";
+// import { GithubIcon } from "ui/github-icon";
+// import { DiscordIcon } from "ui/discord-icon";
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { BasicUser } from "app-types/user";
 import { getUserAvatar } from "lib/user/utils";
@@ -137,7 +137,7 @@ export function AppSidebarUserInner(props: {
               <Command className="size-4 text-foreground" />
               <span>{t("keyboardShortcuts")}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={() => {
                 window.open(
                   "https://github.com/cgoinglove/better-chatbot/issues/new",
@@ -155,7 +155,7 @@ export function AppSidebarUserInner(props: {
             >
               <DiscordIcon className="size-4 fill-foreground" />
               <span>{t("joinCommunity")}</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuSeparator />
 
             <DropdownMenuItem

@@ -188,7 +188,7 @@
       "createAccount": "Create account"
     },
     "Intro": {
-      "description": "Welcome to better-chatbot. Sign in to experience our AI-powered conversational tools."
+      "description": "Welcome to CNAI. Sign in to experience our AI-powered agents and tools."
     }
   },
   "Chat": {
@@ -247,7 +247,8 @@
         "visualization": "Data Visualization",
         "webSearch": "Search the Web",
         "http": "HTTP Request",
-        "code": "Code Execution"
+        "code": "Code Execution",
+        "fileGenerator": "File Generator"
       }
     },
     "VoiceChat": {

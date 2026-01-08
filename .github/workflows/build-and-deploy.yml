@@ -1,0 +1,144 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [internal, cn/main]
+  workflow_dispatch:
+    inputs:
+      skip_docker_build:
+        description: "Skip Docker build/publish"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: docker.io
+  DOCKER_ORG: globalspecllc
+  IMAGE_NAME: better-chatbot
+
+jobs:
+  set-versions:
+    name: Set Versions
+    runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.get_version.outputs.app_version }}
+      docker_tag: ${{ steps.get_version.outputs.docker_tag }}
+      git_hash: ${{ steps.get_version.outputs.git_hash }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          # Generate version based on date, commit count and hash
+          CURRENT_COMMIT_DATE=$(git show -s --format=%cd --date=format:'%Y%m%d' HEAD)
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          CURRENT_COMMIT_HASH=$(git show -s --format=%h HEAD)
+          APP_VERSION="${CURRENT_COMMIT_DATE}.${COMMIT_COUNT}.${CURRENT_COMMIT_HASH}"
+
+          # Docker tag format
+          DOCKER_TAG="${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${APP_VERSION}"
+
+          echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
+          echo "docker_tag=${DOCKER_TAG}" >> $GITHUB_OUTPUT
+          echo "git_hash=${CURRENT_COMMIT_HASH}" >> $GITHUB_OUTPUT
+
+          echo "Generated version: ${APP_VERSION}"
+          echo "Docker tag: ${DOCKER_TAG}"
+
+  build-and-publish:
+    needs: [set-versions]
+    strategy:
+      matrix:
+        environment: [dev, test, production]
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_docker_build }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push environment image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-${{ matrix.environment }}
+            ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.environment }}
+          build-args: |
+            CONFIG_ENV=${{ matrix.environment }}
+            APP_VERSION=${{ needs.set-versions.outputs.app_version }}
+            GIT_HASH=${{ needs.set-versions.outputs.git_hash }}
+            DOCKER_BUILD=1
+          labels: |
+            application.version=${{ needs.set-versions.outputs.app_version }}
+            application.name=better-chatbot
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  update-dev-environment:
+    needs: [set-versions, build-and-publish]
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_docker_build }}
+    steps:
+      - name: Checkout Helm Chart Repository
+        uses: actions/checkout@v4
+        with:
+          repository: globalspec/cnai-chart
+          token: ${{ secrets.GH_ACTIONS_PAT }}
+          path: helm-chart
+
+      - name: Update Helm Chart Version
+        env:
+          GH_TOKEN: ${{ secrets.GH_ACTIONS_PAT }}
+        run: |
+          cd helm-chart
+          # Update the dev version file
+          cat > environments/cnai/dev-version.yaml << EOF
+          image:
+            tag: "${{ needs.set-versions.outputs.app_version }}-dev"
+          EOF
+
+          # Configure git
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Commit and push changes
+          git add environments/cnai/dev-version.yaml
+          git commit -m "build: update better-chatbot dev to version ${{ needs.set-versions.outputs.app_version }}"
+          git push
+
+      - name: Summary
+        run: |
+          echo "## 🎉 Build and Deploy Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ inputs.skip_docker_build }}" != "true" ]]; then
+            echo "✅ Docker images built and published for all environments" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Docker Images:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Dev: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-dev" >> $GITHUB_STEP_SUMMARY
+            echo "- Test: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-test" >> $GITHUB_STEP_SUMMARY
+            echo "- Production: ${{ env.REGISTRY }}/${{ env.DOCKER_ORG }}/${{ env.IMAGE_NAME }}:${{ needs.set-versions.outputs.app_version }}-production" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Dev environment updated automatically!" >> $GITHUB_STEP_SUMMARY

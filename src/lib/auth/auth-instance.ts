@@ -3,6 +3,7 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin } from "better-auth/plugins";
+import { customSession } from "better-auth/plugins";
 import { pgDb } from "lib/db/pg/db.pg";
 import { headers } from "next/headers";
 import {
@@ -87,8 +88,7 @@ const options = {
   },
   session: {
     cookieCache: {
-      enabled: true,
-      maxAge: 60 * 60,
+      enabled: false, // Set to false to disable cookie caching
     },
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
@@ -116,7 +116,16 @@ const options = {
 
 export const auth = betterAuth({
   ...options,
-  plugins: [...(options.plugins ?? [])],
+  plugins: [
+    ...(options.plugins ?? []),
+    customSession(async ({ user, session }) => {
+      const { image: _, ...userWithoutImage } = user;
+      return {
+        ...session,
+        user: { ...userWithoutImage },
+      };
+    }, options),
+  ],
 });
 
 export const getSession = async () => {
