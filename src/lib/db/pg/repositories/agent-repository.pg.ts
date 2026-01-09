@@ -199,13 +199,14 @@ export const pgAgentRepository: AgentRepository = {
         description: AgentTable.description,
         icon: AgentTable.icon,
         userId: AgentTable.userId,
-        // Exclude instructions from list queries for performance
+        // Exclude full instructions from list queries for performance, but include autoStart
         visibility: AgentTable.visibility,
         createdAt: AgentTable.createdAt,
         updatedAt: AgentTable.updatedAt,
         userName: UserTable.name,
         userAvatar: UserTable.image,
         isBookmarked: sql<boolean>`CASE WHEN ${BookmarkTable.id} IS NOT NULL THEN true ELSE false END`,
+        autoStart: sql<boolean>`COALESCE((${AgentTable.instructions}->>'autoStart')::boolean, false)`,
       })
       .from(AgentTable)
       .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
@@ -232,6 +233,7 @@ export const pgAgentRepository: AgentRepository = {
       icon: result.icon ?? undefined,
       userName: result.userName ?? undefined,
       userAvatar: result.userAvatar ?? undefined,
+      autoStart: result.autoStart ?? false,
     }));
   },
 

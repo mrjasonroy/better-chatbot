@@ -81,6 +81,7 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
                 newMention,
               ],
             },
+            pendingAutoStart: agent.autoStart ? agent.id : undefined,
           };
         });
       } else {
@@ -88,6 +89,7 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
 
         appStore.setState(() => ({
           pendingThreadMention: newMention,
+          pendingAutoStart: agent.autoStart ? agent.id : undefined,
         }));
       }
     },
