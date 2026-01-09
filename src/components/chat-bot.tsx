@@ -94,6 +94,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     threadList,
     threadMentions,
     pendingThreadMention,
+    pendingAutoStart,
     threadImageToolModel,
   ] = appStore(
     useShallow((state) => [
@@ -105,6 +106,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
       state.threadList,
       state.threadMentions,
       state.pendingThreadMention,
+      state.pendingAutoStart,
       state.threadImageToolModel,
     ]),
   );
@@ -362,6 +364,26 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
       }));
     }
   }, [pendingThreadMention, threadId, appStoreMutate]);
+
+  // Handle auto-start: automatically send a greeting when an agent with autoStart is selected
+  useEffect(() => {
+    if (pendingAutoStart && threadId && messages.length === 0) {
+      // Clear the pending auto-start first to prevent re-triggering
+      appStoreMutate({ pendingAutoStart: undefined });
+      // Send an initial greeting to trigger the agent
+      sendMessage({
+        id: generateUUID(),
+        role: "user",
+        parts: [{ type: "text", text: "Hello" }],
+      });
+    }
+  }, [
+    pendingAutoStart,
+    threadId,
+    messages.length,
+    appStoreMutate,
+    sendMessage,
+  ]);
 
   useEffect(() => {
     if (isInitialThreadEntry)

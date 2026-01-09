@@ -12,6 +12,7 @@ export const AgentInstructionsSchema = z.object({
   role: z.string().optional(),
   systemPrompt: z.string().optional(),
   mentions: z.array(ChatMentionSchema).optional(),
+  autoStart: z.boolean().optional(), // Auto-start conversation when agent is selected
 });
 
 export const AgentCreateSchema = z
@@ -66,6 +67,7 @@ export type AgentSummary = {
   userName?: string;
   userAvatar?: string;
   isBookmarked?: boolean;
+  autoStart?: boolean; // Auto-start conversation when agent is selected
 };
 
 export type Agent = AgentSummary & {

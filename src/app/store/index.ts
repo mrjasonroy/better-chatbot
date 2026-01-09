@@ -65,6 +65,7 @@ export interface AppState {
     };
   };
   pendingThreadMention?: ChatMention;
+  pendingAutoStart?: string; // Agent ID that should auto-start conversation
 }
 
 export interface AppDispatch {
@@ -110,6 +111,7 @@ const initialState: AppState = {
     },
   },
   pendingThreadMention: undefined,
+  pendingAutoStart: undefined,
 };
 
 export const appStore = create<AppState & AppDispatch>()(

@@ -29,6 +29,7 @@ import {
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Textarea } from "ui/textarea";
+import { Checkbox } from "ui/checkbox";
 import { ScrollArea } from "ui/scroll-area";
 import { Skeleton } from "ui/skeleton";
 import { TextShimmer } from "ui/text-shimmer";
@@ -503,6 +504,27 @@ export default function EditAgent({
                 readOnly={!hasEditAccess}
               />
             )}
+            <div className="flex items-center gap-2 mt-2">
+              <Checkbox
+                id="agent-auto-start"
+                disabled={isLoading || !hasEditAccess}
+                checked={agent.instructions?.autoStart || false}
+                onCheckedChange={(checked) =>
+                  setAgent({
+                    instructions: {
+                      ...agent.instructions,
+                      autoStart: checked === true,
+                    },
+                  })
+                }
+              />
+              <Label
+                htmlFor="agent-auto-start"
+                className="text-sm text-muted-foreground cursor-pointer"
+              >
+                Start conversation when selected
+              </Label>
+            </div>
           </div>
 
           <div className="flex gap-2 flex-col">
