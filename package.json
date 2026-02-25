@@ -49,6 +49,8 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.56",
+    "@ai-sdk/deepseek": "^1.0.31",
+    "@ai-sdk/gateway": "^2.0.18",
     "@ai-sdk/google": "^2.0.51",
     "@ai-sdk/groq": "^2.0.33",
     "@ai-sdk/openai": "^2.0.88",
@@ -156,10 +158,7 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "*.{js,json,mjs,ts,yaml,tsx,css}": [
-      "pnpm format",
-      "pnpm lint:fix"
-    ]
+    "*.{js,json,mjs,ts,yaml,tsx,css}": ["pnpm format", "pnpm lint:fix"]
   },
   "packageManager": "pnpm@10.2.1",
   "engines": {

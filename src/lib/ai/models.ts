@@ -1,13 +1,12 @@
 import "server-only";
 
-import { createOllama } from "ollama-ai-provider-v2";
-import { openai } from "@ai-sdk/openai";
-import { google } from "@ai-sdk/google";
-import { anthropic } from "@ai-sdk/anthropic";
-import { xai } from "@ai-sdk/xai";
-import { LanguageModelV2, openrouter } from "@openrouter/ai-sdk-provider";
-import { createGroq } from "@ai-sdk/groq";
-import { LanguageModel } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createGateway } from "@ai-sdk/gateway";
+
+import { LanguageModelV2 } from "@openrouter/ai-sdk-provider";
 import {
   createOpenAICompatibleModels,
   openaiCompatibleModelsSafeParse,
@@ -18,82 +17,109 @@ import {
   OPENAI_FILE_MIME_TYPES,
   GEMINI_FILE_MIME_TYPES,
   ANTHROPIC_FILE_MIME_TYPES,
-  XAI_FILE_MIME_TYPES,
 } from "./file-support";
+import { LanguageModel } from "ai";
 
-const ollama = createOllama({
-  baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
+// Vercel AI Gateway configuration
+const useGateway = !!process.env.VERCEL_AI_GATEWAY_API_KEY;
+
+const gateway = createGateway({
+  apiKey: process.env.VERCEL_AI_GATEWAY_API_KEY,
 });
-const groq = createGroq({
-  baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
-  apiKey: process.env.GROQ_API_KEY,
+
+const anthropic = createAnthropic({
+  baseURL: process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com/v1",
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+const openai = createOpenAI({
+  baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const googleAI = createGoogleGenerativeAI({
+  baseURL:
+    process.env.GOOGLE_GENERATIVE_AI_BASE_URL || "https://api.google.com/v1",
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+const deepseek = createDeepSeek({
+  baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
+  apiKey: process.env.DEEPSEEK_API_KEY,
+});
+
+const meta = createOpenAI({
+  baseURL: process.env.META_BASE_URL || "https://api.meta.ai/v1",
+  apiKey: process.env.META_API_KEY,
+});
+
+const getGateway = (provider: string, model: string) => {
+  if (useGateway) {
+    return gateway(`${provider}/${model}`);
+  }
+  switch (provider) {
+    case "anthropic":
+      return anthropic(model);
+    case "openai":
+      return openai(model);
+    case "google":
+      return googleAI(model);
+    case "deepseek":
+      return deepseek(model);
+    case "meta":
+      return meta(model);
+  }
+  throw new Error(`Unsupported provider: ${provider}`);
+};
 
 const staticModels = {
+  anthropic: {
+    "claude-sonnet-4.5": getGateway("anthropic", "claude-sonnet-4.5"),
+    "claude-3.5-sonnet": getGateway("anthropic", "claude-3-5-sonnet-20241022"),
+    "claude-3.5-haiku": getGateway("anthropic", "claude-3-5-haiku-20241022"),
+    "claude-opus-4.1": getGateway("anthropic", "claude-opus-4.1"),
+  },
   openai: {
-    "gpt-4.1": openai("gpt-4.1"),
-    "gpt-4.1-mini": openai("gpt-4.1-mini"),
-    "o4-mini": openai("o4-mini"),
-    o3: openai("o3"),
-    "gpt-5.1-chat": openai("gpt-5.1-chat-latest"),
-    "gpt-5.1": openai("gpt-5.1"),
-    "gpt-5.1-codex": openai("gpt-5.1-codex"),
-    "gpt-5.1-codex-mini": openai("gpt-5.1-codex-mini"),
+    "gpt-5": getGateway("openai", "gpt-5"),
+    "gpt-4.1": getGateway("openai", "gpt-4.1"),
+    "gpt-5-mini": getGateway("openai", "gpt-5-mini"),
+    "gpt-4o": getGateway("openai", "gpt-4o"),
+    "gpt-4o-mini": getGateway("openai", "gpt-4o-mini"),
+    "o4-mini": getGateway("openai", "o4-mini"),
+    o3: getGateway("openai", "o3"),
+    o1: getGateway("openai", "o1"),
+    "o1-mini": getGateway("openai", "o1-mini"),
   },
   google: {
-    "gemini-2.5-flash-lite": google("gemini-2.5-flash-lite"),
-    "gemini-2.5-flash": google("gemini-2.5-flash"),
-    "gemini-3-pro": google("gemini-3-pro-preview"),
-    "gemini-2.5-pro": google("gemini-2.5-pro"),
+    "gemini-3.0-pro-preview": getGateway("google", "gemini-3.0-pro-preview"),
+    "gemini-2.5-flash": getGateway("google", "gemini-2.5-flash"),
+    "gemini-2.5-pro": getGateway("google", "gemini-2.5-pro"),
+    "gemini-2.5-flash-image-preview": getGateway(
+      "google",
+      "gemini-2.5-flash-image-preview",
+    ),
+    "gemini-2.0-flash-exp": getGateway("google", "gemini-2.0-flash-exp"),
+    "gemini-1.5-flash": getGateway("google", "gemini-1.5-flash"),
+    "gemini-1.5-pro": getGateway("google", "gemini-1.5-pro"),
   },
-  anthropic: {
-    "sonnet-4.5": anthropic("claude-sonnet-4-5"),
-    "haiku-4.5": anthropic("claude-haiku-4-5"),
-    "opus-4.5": anthropic("claude-opus-4-5"),
+  deepseek: {
+    "deepseek-v3": getGateway("deepseek", "deepseek-v3"),
   },
-  xai: {
-    "grok-4-1-fast": xai("grok-4-1-fast-non-reasoning"),
-    "grok-4-1": xai("grok-4-1"),
-    "grok-3-mini": xai("grok-3-mini"),
-  },
-  ollama: {
-    "gemma3:1b": ollama("gemma3:1b"),
-    "gemma3:4b": ollama("gemma3:4b"),
-    "gemma3:12b": ollama("gemma3:12b"),
-  },
-  groq: {
-    "kimi-k2-instruct": groq("moonshotai/kimi-k2-instruct"),
-    "llama-4-scout-17b": groq("meta-llama/llama-4-scout-17b-16e-instruct"),
-    "gpt-oss-20b": groq("openai/gpt-oss-20b"),
-    "gpt-oss-120b": groq("openai/gpt-oss-120b"),
-    "qwen3-32b": groq("qwen/qwen3-32b"),
-  },
-  openRouter: {
-    "gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
-    "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
-    "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
-    "qwen3-coder:free": openrouter("qwen/qwen3-coder:free"),
-    "deepseek-r1:free": openrouter("deepseek/deepseek-r1-0528:free"),
-    "deepseek-v3:free": openrouter("deepseek/deepseek-chat-v3-0324:free"),
-    "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
+  meta: {
+    "llama-4-maverick": getGateway("meta", "llama-4-maverick"),
+    "llama-3.3-70b": getGateway("meta", "llama-3.3-70b"),
   },
 };
 
 const staticUnsupportedModels = new Set([
   staticModels.openai["o4-mini"],
-  staticModels.ollama["gemma3:1b"],
-  staticModels.ollama["gemma3:4b"],
-  staticModels.ollama["gemma3:12b"],
-  staticModels.openRouter["gpt-oss-20b:free"],
-  staticModels.openRouter["qwen3-8b:free"],
-  staticModels.openRouter["qwen3-14b:free"],
-  staticModels.openRouter["deepseek-r1:free"],
-  staticModels.openRouter["gemini-2.0-flash-exp:free"],
+  staticModels.openai["o3"],
+  staticModels.openai["o1"],
+  staticModels.openai["o1-mini"],
 ]);
 
 const staticSupportImageInputModels = {
   ...staticModels.google,
-  ...staticModels.xai,
   ...staticModels.openai,
   ...staticModels.anthropic,
 };
@@ -104,7 +130,7 @@ const staticFilePartSupportByModel = new Map<
 >();
 
 const registerFileSupport = (
-  model: LanguageModel | undefined,
+  model: LanguageModelV2 | undefined,
   mimeTypes: readonly string[] = DEFAULT_FILE_PART_MIME_TYPES,
 ) => {
   if (!model) return;
@@ -112,16 +138,13 @@ const registerFileSupport = (
 };
 
 registerFileSupport(staticModels.openai["gpt-4.1"], OPENAI_FILE_MIME_TYPES);
-registerFileSupport(
-  staticModels.openai["gpt-4.1-mini"],
-  OPENAI_FILE_MIME_TYPES,
-);
 registerFileSupport(staticModels.openai["gpt-5"], OPENAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.openai["gpt-5-mini"], OPENAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.openai["gpt-5-nano"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.openai["gpt-4o"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.openai["gpt-4o-mini"], OPENAI_FILE_MIME_TYPES);
 
 registerFileSupport(
-  staticModels.google["gemini-2.5-flash-lite"],
+  staticModels.google["gemini-3.0-pro-preview"],
   GEMINI_FILE_MIME_TYPES,
 );
 registerFileSupport(
@@ -132,23 +155,26 @@ registerFileSupport(
   staticModels.google["gemini-2.5-pro"],
   GEMINI_FILE_MIME_TYPES,
 );
-
 registerFileSupport(
-  staticModels.anthropic["sonnet-4.5"],
-  ANTHROPIC_FILE_MIME_TYPES,
-);
-registerFileSupport(
-  staticModels.anthropic["opus-4.1"],
-  ANTHROPIC_FILE_MIME_TYPES,
-);
-
-registerFileSupport(staticModels.xai["grok-4-fast"], XAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.xai["grok-4"], XAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.xai["grok-3"], XAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.xai["grok-3-mini"], XAI_FILE_MIME_TYPES);
-registerFileSupport(
-  staticModels.openRouter["gemini-2.0-flash-exp:free"],
+  staticModels.google["gemini-2.5-flash-image-preview"],
   GEMINI_FILE_MIME_TYPES,
+);
+
+registerFileSupport(
+  staticModels.anthropic["claude-sonnet-4.5"],
+  ANTHROPIC_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.anthropic["claude-3.5-sonnet"],
+  ANTHROPIC_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.anthropic["claude-3.5-haiku"],
+  ANTHROPIC_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.anthropic["claude-opus-4.1"],
+  ANTHROPIC_FILE_MIME_TYPES,
 );
 
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
@@ -167,7 +193,7 @@ const allUnsupportedModels = new Set([
   ...staticUnsupportedModels,
 ]);
 
-export const isToolCallUnsupportedModel = (model: LanguageModel) => {
+export const isToolCallUnsupportedModel = (model: LanguageModelV2) => {
   return allUnsupportedModels.has(model);
 };
 
@@ -175,7 +201,7 @@ const isImageInputUnsupportedModel = (model: LanguageModelV2) => {
   return !Object.values(staticSupportImageInputModels).includes(model);
 };
 
-export const getFilePartSupportedMimeTypes = (model: LanguageModel) => {
+export const getFilePartSupportedMimeTypes = (model: LanguageModelV2) => {
   return staticFilePartSupportByModel.get(model) ?? [];
 };
 
@@ -192,13 +218,20 @@ export const customModelProvider = {
     })),
     hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),
-  getModel: (model?: ChatModel): LanguageModel => {
+  getModel: (model?: ChatModel): LanguageModelV2 => {
     if (!model) return fallbackModel;
     return allModels[model.provider]?.[model.model] || fallbackModel;
   },
 };
 
 function checkProviderAPIKey(provider: keyof typeof staticModels) {
+  // If using gateway, check for gateway API key
+  if (useGateway) {
+    const gatewayKey = process.env.VERCEL_AI_GATEWAY_API_KEY;
+    return !!gatewayKey && gatewayKey !== "****";
+  }
+
+  // Otherwise check individual provider keys
   let key: string | undefined;
   switch (provider) {
     case "openai":
@@ -210,17 +243,14 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
     case "anthropic":
       key = process.env.ANTHROPIC_API_KEY;
       break;
-    case "xai":
-      key = process.env.XAI_API_KEY;
+    case "deepseek":
+      key = process.env.DEEPSEEK_API_KEY;
       break;
-    case "groq":
-      key = process.env.GROQ_API_KEY;
-      break;
-    case "openRouter":
-      key = process.env.OPENROUTER_API_KEY;
+    case "meta":
+      key = process.env.META_API_KEY;
       break;
     default:
       return true; // assume the provider has an API key
   }
-  return !!key && key != "****";
+  return !!key && key !== "****";
 }
