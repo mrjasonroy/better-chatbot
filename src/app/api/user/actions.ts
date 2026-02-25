@@ -99,7 +99,7 @@ export const updateUserDetailsAction = validatedActionWithUserManagePermission(
 
       const isDifferentEmail = email && email !== userSession.user.email;
       const isDifferentName = name && name !== userSession.user.name;
-      const isDifferentImage = image && image !== userSession.user.image;
+      const isDifferentImage = image && image !== user.image;
 
       // this forces a session update for the current user, getting the latest data
       if (isOwnResource) {
