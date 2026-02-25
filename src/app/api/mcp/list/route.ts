@@ -22,10 +22,22 @@ export async function GET() {
   // Add servers that exist in DB but not yet in memory
   const addTargets = servers.filter((server) => !memoryMap.has(server.id));
 
+  // Remove clients that exist in memory but not in DB
+  const serverIds = new Set(servers.map((s) => s.id));
+  const removeTargets = memoryClients.filter(({ id }) => !serverIds.has(id));
+
   if (addTargets.length > 0) {
     // no need to wait for this
     Promise.allSettled(
       addTargets.map((server) => mcpClientsManager.refreshClient(server.id)),
+    );
+  }
+  if (removeTargets.length > 0) {
+    // no need to wait for this
+    Promise.allSettled(
+      removeTargets.map((client) =>
+        mcpClientsManager.disconnectClient(client.id),
+      ),
     );
   }
 

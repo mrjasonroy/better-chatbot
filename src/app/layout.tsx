@@ -9,6 +9,7 @@ import {
 import { Toaster } from "ui/sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+import { FileStorageInitializer } from "@/components/file-storage-initializer";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -19,9 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "better-chatbot",
-  description:
-    "Better Chatbot is a chatbot that uses the Tools to answer questions.",
+  title: "CNAI",
+  description: "CNAI is a chatbot that uses the Tools to answer questions.",
 };
 
 export default async function RootLayout({
@@ -45,6 +45,7 @@ export default async function RootLayout({
         >
           <ThemeStyleProvider>
             <NextIntlClientProvider>
+              <FileStorageInitializer />
               <div id="root">
                 {children}
                 <Toaster richColors />
