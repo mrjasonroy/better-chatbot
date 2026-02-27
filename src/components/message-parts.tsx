@@ -69,6 +69,8 @@ import { ModelProviderIcon } from "ui/model-provider-icon";
 import { appStore } from "@/app/store";
 import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
 
+const isDiscreetMcp = !!process.env.NEXT_PUBLIC_CN_DISCREET_MCP;
+
 type MessagePart = UIMessage["parts"][number];
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
 type AssistMessagePart = Extract<MessagePart, { type: "text" }>;
@@ -379,7 +381,12 @@ export const AssistMessagePart = memo(function AssistMessagePart({
         <Markdown>{part.text}</Markdown>
       </div>
       {showActions && (
-        <div className="flex w-full">
+        <div
+          className={cn(
+            "flex w-full",
+            process.env.NEXT_PUBLIC_CN_WIDE_TABLES && "max-w-3xl mx-auto",
+          )}
+        >
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -967,7 +974,12 @@ export const ToolMessagePart = memo(
     }, [isWorkflowTool, isCompleted, result, isLast]);
 
     return (
-      <div className="group w-full">
+      <div
+        className={cn(
+          "group w-full",
+          process.env.NEXT_PUBLIC_CN_WIDE_TABLES && "max-w-3xl mx-auto",
+        )}
+      >
         {CustomToolComponent ? (
           CustomToolComponent
         ) : (
@@ -976,7 +988,14 @@ export const ToolMessagePart = memo(
               className="flex gap-2 items-center cursor-pointer group/title"
               onClick={() => setExpanded(!expanded)}
             >
-              <div className="p-1.5 text-primary bg-input/40 rounded">
+              <div
+                className={cn(
+                  "p-1.5 rounded",
+                  isDiscreetMcp
+                    ? "text-muted-foreground"
+                    : "text-primary bg-input/40",
+                )}
+              >
                 {isExecuting ? (
                   <Loader className="size-3.5 animate-spin" />
                 ) : isError ? (
@@ -997,7 +1016,14 @@ export const ToolMessagePart = memo(
                   <HammerIcon className="size-3.5" />
                 )}
               </div>
-              <span className="font-bold flex items-center gap-2">
+              <span
+                className={cn(
+                  "flex items-center gap-2",
+                  isDiscreetMcp
+                    ? "text-muted-foreground font-medium"
+                    : "font-bold",
+                )}
+              >
                 {isExecuting ? (
                   <TextShimmer>{mcpServerName}</TextShimmer>
                 ) : (
@@ -1018,57 +1044,18 @@ export const ToolMessagePart = memo(
                 />
               </div>
             </div>
-            <div className="flex gap-2 py-2">
-              <div className="w-7 flex justify-center">
-                <Separator
-                  orientation="vertical"
-                  className="h-full bg-gradient-to-t from-transparent to-border to-5%"
-                />
-              </div>
-              <div className="w-full flex flex-col gap-2">
-                <div
-                  className={cn(
-                    "min-w-0 w-full p-4 rounded-lg bg-card px-4 border text-xs transition-colors fade-300",
-                    !isExpanded && "hover:bg-secondary cursor-pointer",
-                  )}
-                  onClick={() => {
-                    if (!isExpanded) {
-                      setExpanded(true);
-                    }
-                  }}
-                >
-                  <div className="flex items-center">
-                    <h5 className="text-muted-foreground font-medium select-none transition-colors">
-                      Request
-                    </h5>
-                    <div className="flex-1" />
-                    {copiedInput ? (
-                      <Check className="size-3" />
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-3 text-muted-foreground"
-                        onClick={() => copyInput(JSON.stringify(input))}
-                      >
-                        <Copy className="size-3" />
-                      </Button>
-                    )}
-                  </div>
-                  {isExpanded && (
-                    <div className="p-2 max-h-[300px] overflow-y-auto ">
-                      <JsonView data={input} />
-                    </div>
-                  )}
-                </div>
-                {!result ? null : isWorkflowTool ? (
-                  <WorkflowInvocation
-                    result={result as VercelAIWorkflowToolStreamingResult}
+            {(!isDiscreetMcp || expanded || isManualToolInvocation) && (
+              <div className="flex gap-2 py-2">
+                <div className="w-7 flex justify-center">
+                  <Separator
+                    orientation="vertical"
+                    className="h-full bg-gradient-to-t from-transparent to-border to-5%"
                   />
-                ) : (
+                </div>
+                <div className="w-full flex flex-col gap-2">
                   <div
                     className={cn(
-                      "min-w-0 w-full p-4 rounded-lg bg-card px-4 border text-xs mt-2 transition-colors fade-300",
+                      "min-w-0 w-full p-4 rounded-lg bg-card px-4 border text-xs transition-colors fade-300",
                       !isExpanded && "hover:bg-secondary cursor-pointer",
                     )}
                     onClick={() => {
@@ -1078,83 +1065,124 @@ export const ToolMessagePart = memo(
                     }}
                   >
                     <div className="flex items-center">
-                      <h5 className="text-muted-foreground font-medium select-none">
-                        Response
+                      <h5 className="text-muted-foreground font-medium select-none transition-colors">
+                        Request
                       </h5>
                       <div className="flex-1" />
-                      {copiedOutput ? (
+                      {copiedInput ? (
                         <Check className="size-3" />
                       ) : (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="size-3 text-muted-foreground"
-                          onClick={() => copyOutput(JSON.stringify(result))}
+                          onClick={() => copyInput(JSON.stringify(input))}
                         >
                           <Copy className="size-3" />
                         </Button>
                       )}
                     </div>
                     {isExpanded && (
-                      <div className="p-2 max-h-[300px] overflow-y-auto">
-                        <JsonView data={result} />
+                      <div className="p-2 max-h-[300px] overflow-y-auto ">
+                        <JsonView data={input} />
                       </div>
                     )}
                   </div>
-                )}
+                  {!result ? null : isWorkflowTool ? (
+                    <WorkflowInvocation
+                      result={result as VercelAIWorkflowToolStreamingResult}
+                    />
+                  ) : (
+                    <div
+                      className={cn(
+                        "min-w-0 w-full p-4 rounded-lg bg-card px-4 border text-xs mt-2 transition-colors fade-300",
+                        !isExpanded && "hover:bg-secondary cursor-pointer",
+                      )}
+                      onClick={() => {
+                        if (!isExpanded) {
+                          setExpanded(true);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <h5 className="text-muted-foreground font-medium select-none">
+                          Response
+                        </h5>
+                        <div className="flex-1" />
+                        {copiedOutput ? (
+                          <Check className="size-3" />
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-3 text-muted-foreground"
+                            onClick={() => copyOutput(JSON.stringify(result))}
+                          >
+                            <Copy className="size-3" />
+                          </Button>
+                        )}
+                      </div>
+                      {isExpanded && (
+                        <div className="p-2 max-h-[300px] overflow-y-auto">
+                          <JsonView data={result} />
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                {isManualToolInvocation && (
-                  <div className="flex flex-row gap-2 items-center mt-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-full text-xs hover:ring py-2"
-                      onClick={() =>
-                        addToolResult?.({
-                          tool: toolName,
-                          toolCallId,
-                          output: ManualToolConfirmTag.create({
-                            confirm: true,
-                          }),
-                        })
-                      }
-                    >
-                      <Check />
-                      {t("Common.approve")}
-                      <Separator orientation="vertical" className="h-4" />
-                      <span className="text-muted-foreground">
-                        {getShortcutKeyList(approveToolInvocationShortcut).join(
-                          " ",
-                        )}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full text-xs py-2"
-                      onClick={() =>
-                        addToolResult?.({
-                          tool: toolName,
-                          toolCallId,
-                          output: ManualToolConfirmTag.create({
-                            confirm: false,
-                          }),
-                        })
-                      }
-                    >
-                      <X />
-                      {t("Common.reject")}
-                      <Separator orientation="vertical" />
-                      <span className="text-muted-foreground">
-                        {getShortcutKeyList(rejectToolInvocationShortcut).join(
-                          " ",
-                        )}
-                      </span>
-                    </Button>
-                  </div>
-                )}
+                  {isManualToolInvocation && (
+                    <div className="flex flex-row gap-2 items-center mt-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="rounded-full text-xs hover:ring py-2"
+                        onClick={() =>
+                          addToolResult?.({
+                            tool: toolName,
+                            toolCallId,
+                            output: ManualToolConfirmTag.create({
+                              confirm: true,
+                            }),
+                          })
+                        }
+                      >
+                        <Check />
+                        {t("Common.approve")}
+                        <Separator orientation="vertical" className="h-4" />
+                        <span className="text-muted-foreground">
+                          {getShortcutKeyList(
+                            approveToolInvocationShortcut,
+                          ).join(" ")}
+                        </span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full text-xs py-2"
+                        onClick={() =>
+                          addToolResult?.({
+                            tool: toolName,
+                            toolCallId,
+                            output: ManualToolConfirmTag.create({
+                              confirm: false,
+                            }),
+                          })
+                        }
+                      >
+                        <X />
+                        {t("Common.reject")}
+                        <Separator orientation="vertical" />
+                        <span className="text-muted-foreground">
+                          {getShortcutKeyList(
+                            rejectToolInvocationShortcut,
+                          ).join(" ")}
+                        </span>
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {showActions && (
               <div className="flex flex-row gap-2 items-center">

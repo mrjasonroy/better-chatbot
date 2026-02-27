@@ -264,7 +264,8 @@
       "manual": "Manual",
       "none": "None",
       "mentionOnly": "@mention only",
-      "noToolsAvailable": "No tools available"
+      "noToolsAvailable": "No tools available",
+      "agentRequired": "Agent required"
     },
     "VoiceChat": {
       "title": "Voice Chat Mode",
@@ -339,7 +340,8 @@
       "confirmDeleteExport": "Are you sure you want to delete this export? This action cannot be undone.",
       "exportDeleted": "Export deleted successfully",
       "failedToDeleteExport": "Failed to delete export"
-    }
+    },
+    "agentRequiredError": "Please select an agent before sending a message. You can pick one from the left menu bar, the Tools menu, or type @. Agents enable specific capabilities like access to business logic and internal data. To chat without an agent, turn off \"Agent required\" in the Tools menu."
   },
   "Layout": {
     "workflow": "Workflow",

@@ -63,7 +63,14 @@ const PurePreviewMessage = ({
   if (!partsForDisplay.length) return null;
 
   return (
-    <div className="w-full mx-auto max-w-3xl px-6 group/message">
+    <div
+      className={cn(
+        "w-full mx-auto px-6 group/message",
+        process.env.NEXT_PUBLIC_CN_WIDE_TABLES && !isUserMessage
+          ? "max-w-full"
+          : "max-w-3xl",
+      )}
+    >
       <div
         className={cn(
           "flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl",

@@ -65,6 +65,7 @@ export interface AppState {
     };
   };
   pendingThreadMention?: ChatMention;
+  agentRequired: boolean;
 }
 
 export interface AppDispatch {
@@ -110,6 +111,7 @@ const initialState: AppState = {
     },
   },
   pendingThreadMention: undefined,
+  agentRequired: true,
 };
 
 export const appStore = create<AppState & AppDispatch>()(
@@ -140,6 +142,7 @@ export const appStore = create<AppState & AppDispatch>()(
           ...state.voiceChat,
           isOpen: false,
         },
+        agentRequired: state.agentRequired ?? initialState.agentRequired,
       }),
     },
   ),

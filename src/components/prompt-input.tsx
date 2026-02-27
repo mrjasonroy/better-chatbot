@@ -11,6 +11,7 @@ import {
   PaperclipIcon,
   PlusIcon,
   Square,
+  UploadIcon,
   XIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -24,6 +25,7 @@ import dynamic from "next/dynamic";
 import { ToolModeDropdown } from "./tool-mode-dropdown";
 
 import { ToolSelectDropdown } from "./tool-select-dropdown";
+import { ChatExportPopup } from "./export/chat-export-popup";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { useTranslations } from "next-intl";
 import { Editor } from "@tiptap/react";
@@ -107,6 +109,7 @@ export default function PromptInput({
     threadFiles,
     threadImageToolModel,
     appStoreMutate,
+    agentRequired,
   ] = appStore(
     useShallow((state) => [
       state.chatModel,
@@ -114,6 +117,7 @@ export default function PromptInput({
       state.threadFiles,
       state.threadImageToolModel,
       state.mutate,
+      state.agentRequired,
     ]),
   );
 
@@ -330,6 +334,15 @@ export default function PromptInput({
     const userMessage = input?.trim() || "";
     if (userMessage.length === 0) return;
 
+    if (
+      process.env.NEXT_PUBLIC_CN_AGENT_REQUIRED &&
+      agentRequired &&
+      !mentions.some((m) => m.type === "agent")
+    ) {
+      toast.error(t("agentRequiredError"));
+      return;
+    }
+
     setInput("");
     const attachmentParts = uploadedFiles.reduce<
       Array<FileUIPart | TextUIPart | any>
@@ -498,6 +511,25 @@ export default function PromptInput({
                   onChange={handleFileSelect}
                   disabled={!threadId}
                 />
+
+                {process.env.NEXT_PUBLIC_CN_SHARE_LINK && threadId && (
+                  <Tooltip>
+                    <ChatExportPopup threadId={threadId}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-full hover:bg-input! p-2!"
+                        >
+                          <UploadIcon className="size-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                    </ChatExportPopup>
+                    <TooltipContent side="top">
+                      {t("Thread.createLink")}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
                 <DropdownMenu
                   open={isUploadDropdownOpen}

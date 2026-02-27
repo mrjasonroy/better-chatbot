@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { PreBlock } from "./pre-block";
-import { isJson, isString, toAny } from "lib/utils";
+import { cn, isJson, isString, toAny } from "lib/utils";
 import JsonView from "ui/json-view";
 import { LinkIcon } from "lucide-react";
 import {
@@ -17,6 +17,8 @@ import {
   TableHead,
   TableCell,
 } from "ui/table";
+
+const isWideTable = !!process.env.NEXT_PUBLIC_CN_WIDE_TABLES;
 
 const FadeIn = memo(({ children }: PropsWithChildren) => {
   return <span className="fade-in animate-in duration-1000">{children} </span>;
@@ -35,13 +37,26 @@ WordByWordFadeIn.displayName = "WordByWordFadeIn";
 const components: Partial<Components> = {
   table: ({ node, children, ...props }) => {
     return (
-      <div className="my-4">
+      <div
+        className={cn(
+          "my-4",
+          isWideTable &&
+            "!col-span-full w-fit min-w-[min(704px,100%)] max-w-full mx-auto max-h-[70vh] overflow-auto [&>[data-slot=table-container]]:!overflow-visible [&_table]:!w-max [&_table]:!min-w-full",
+        )}
+      >
         <Table {...props}>{children}</Table>
       </div>
     );
   },
   thead: ({ node, children, ...props }) => {
-    return <TableHeader {...props}>{children}</TableHeader>;
+    return (
+      <TableHeader
+        className={isWideTable ? "sticky top-0 z-10 bg-background" : undefined}
+        {...props}
+      >
+        {children}
+      </TableHeader>
+    );
   },
   tbody: ({ node, children, ...props }) => {
     return <TableBody {...props}>{children}</TableBody>;
@@ -188,7 +203,13 @@ const components: Partial<Components> = {
 
 const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   return (
-    <article className="w-full h-full relative">
+    <article
+      className={cn(
+        "w-full h-full relative",
+        isWideTable &&
+          "grid grid-cols-[1fr_min(704px,100%)_1fr] [&>*]:col-start-2",
+      )}
+    >
       {isJson(children) ? (
         <JsonView data={children} />
       ) : (
