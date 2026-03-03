@@ -35,9 +35,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
+# .env.local holds secrets (DB creds, API keys) — NEVER commit
+# .env.{dev,production,staging} hold public build-time config (NEXT_PUBLIC_*) — safe to commit
 .env
-.env.*
+.env.local
+!.env.dev
+!.env.production
+!.env.staging
 !.env.example
 
 # vercel
