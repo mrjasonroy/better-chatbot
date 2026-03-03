@@ -45,10 +45,14 @@ export function ChatExportPopup(props: Props) {
       .watch(() => setIsExporting(false))
       .ifOk((exportId) => {
         const link = `${window.location.origin}/export/${exportId}`;
-        navigator.clipboard.writeText(link).then(() => {
-          toast.success(t("Chat.Thread.linkCopied"));
-        });
-        window.open(link, "_blank");
+        navigator.clipboard.writeText(link).then(
+          () => toast.success(t("Chat.Thread.linkCopied")),
+          () => toast.error("Failed to copy link to clipboard"),
+        );
+        const newTab = window.open(link, "_blank");
+        if (!newTab) {
+          toast.info("Link copied — popup was blocked by your browser");
+        }
         handleOpenChange(false);
       })
       .ifFail((error) => {
