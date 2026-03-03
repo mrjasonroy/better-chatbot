@@ -114,15 +114,23 @@ export function ToolSelectDropdown({
   className,
 }: ToolSelectDropdownProps) {
   const [open, setOpen] = useState(false);
-  const [toolChoice, allowedAppDefaultToolkit, allowedMcpServers, mcpList] =
-    appStore(
-      useShallow((state) => [
-        state.toolChoice,
-        state.allowedAppDefaultToolkit,
-        state.allowedMcpServers,
-        state.mcpList,
-      ]),
-    );
+  const [
+    toolChoice,
+    allowedAppDefaultToolkit,
+    allowedMcpServers,
+    mcpList,
+    agentRequired,
+    appStoreMutate,
+  ] = appStore(
+    useShallow((state) => [
+      state.toolChoice,
+      state.allowedAppDefaultToolkit,
+      state.allowedMcpServers,
+      state.mcpList,
+      state.agentRequired,
+      state.mutate,
+    ]),
+  );
 
   const t = useTranslations("Chat.Tool");
   const { isLoading } = useMcpList();
@@ -252,6 +260,24 @@ export function ToolSelectDropdown({
           <DropdownMenuSeparator />
         </div>
         <AgentSelector onSelectAgent={onSelectAgent} />
+        {process.env.NEXT_PUBLIC_CN_AGENT_REQUIRED && (
+          <DropdownMenuItem
+            className={cn(
+              "cursor-pointer font-semibold text-xs text-muted-foreground",
+              agentRequired && "text-foreground",
+            )}
+            onClick={(e) => {
+              e.preventDefault();
+              appStoreMutate({ agentRequired: !agentRequired });
+            }}
+          >
+            <ShieldAlertIcon
+              className={cn("size-3.5", agentRequired && "text-foreground")}
+            />
+            {t("agentRequired")}
+            <Switch className="ml-auto" checked={agentRequired} />
+          </DropdownMenuItem>
+        )}
         <div className="py-1">
           <DropdownMenuSeparator />
         </div>

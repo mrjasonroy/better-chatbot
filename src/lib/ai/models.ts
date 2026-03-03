@@ -74,10 +74,9 @@ const getGateway = (provider: string, model: string) => {
 
 const staticModels = {
   anthropic: {
-    "claude-sonnet-4.5": getGateway("anthropic", "claude-sonnet-4.5"),
-    "claude-3.5-sonnet": getGateway("anthropic", "claude-3-5-sonnet-20241022"),
-    "claude-3.5-haiku": getGateway("anthropic", "claude-3-5-haiku-20241022"),
-    "claude-opus-4.1": getGateway("anthropic", "claude-opus-4.1"),
+    "claude-sonnet-4.6": getGateway("anthropic", "claude-sonnet-4-6"),
+    "claude-opus-4.6": getGateway("anthropic", "claude-opus-4-6"),
+    "claude-haiku-4.5": getGateway("anthropic", "claude-haiku-4-5-20251001"),
   },
   openai: {
     "gpt-5": getGateway("openai", "gpt-5"),
@@ -161,19 +160,15 @@ registerFileSupport(
 );
 
 registerFileSupport(
-  staticModels.anthropic["claude-sonnet-4.5"],
+  staticModels.anthropic["claude-sonnet-4.6"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 registerFileSupport(
-  staticModels.anthropic["claude-3.5-sonnet"],
+  staticModels.anthropic["claude-opus-4.6"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 registerFileSupport(
-  staticModels.anthropic["claude-3.5-haiku"],
-  ANTHROPIC_FILE_MIME_TYPES,
-);
-registerFileSupport(
-  staticModels.anthropic["claude-opus-4.1"],
+  staticModels.anthropic["claude-haiku-4.5"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 
@@ -205,7 +200,7 @@ export const getFilePartSupportedMimeTypes = (model: LanguageModelV2) => {
   return staticFilePartSupportByModel.get(model) ?? [];
 };
 
-const fallbackModel = staticModels.openai["gpt-4.1"];
+const fallbackModel = staticModels.anthropic["claude-sonnet-4.6"];
 
 export const customModelProvider = {
   modelsInfo: Object.entries(allModels).map(([provider, models]) => ({
